@@ -1,7 +1,7 @@
 "use client"
 
 import { AppSidebar } from "@/components/app-sidebar"
-import { CargoCard } from "@/components/cargo-card"
+import { CargoCard, type CargoCardProps } from "@/components/cargo-card"
 import { FilterPanel } from "@/components/filter-panel"
 import {
   Bell, Bookmark, Search, SlidersHorizontal,
@@ -13,22 +13,25 @@ import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 /* ─────────────────────────────────────────────────────────────
-   MOCK DATA
+   MOCK DATA - Updated for new CargoCard interface
 ───────────────────────────────────────────────────────────── */
-const DASHBOARD_CARGOS = [
+const DASHBOARD_CARGOS: (Omit<CargoCardProps, "id"> & { id: string })[] = [
   {
     id: "1",
     from: { city: "Vilnius", country: "LT" },
     to: { city: "Klaipėda", country: "LT" },
     distance: 307,
     price: 1320,
-    priceNegotiable: false,
     weight: 11.8,
-    date: "bal. 2 d.",
-    status: "active" as const,
-    tags: ["Bendras", "Tentinė", "11.8 t"],
+    loadingDate: "2024-04-02",
+    loadingTime: "08:00 - 12:00",
+    status: "published",
+    cargoType: "Bendras krovinys",
+    transportType: "Tentinė",
     views: 12,
     description: "Greitai reikalingas pervežimas",
+    postedAt: "prieš 2 val.",
+    matchingTransports: 2,
   },
   {
     id: "2",
@@ -36,13 +39,14 @@ const DASHBOARD_CARGOS = [
     to: { city: "Šiauliai", country: "LT" },
     distance: 142,
     price: 980,
-    priceNegotiable: false,
     weight: 10,
-    date: "kov. 30 d.",
-    status: "active" as const,
-    tags: ["Šaldomas", "Refrižeratorius", "10 t"],
+    loadingDate: "2024-03-30",
+    status: "published",
+    cargoType: "Šaldomas",
+    transportType: "Refrižeratorius",
     views: 8,
     description: "Temperatūrinis režimas būtinas",
+    postedAt: "prieš 5 val.",
   },
   {
     id: "6",
@@ -50,13 +54,15 @@ const DASHBOARD_CARGOS = [
     to: { city: "Klaipėda", country: "LT" },
     distance: 331,
     price: 1040,
-    priceNegotiable: true,
     weight: 7.6,
-    date: "bal. 2 d.",
-    status: "active" as const,
-    tags: ["Bendroji", "Tentinė", "7.6 t"],
+    loadingDate: "2024-04-02",
+    status: "published",
+    cargoType: "Bendras krovinys",
+    transportType: "Tentinė",
     views: 3,
     description: "Vidutinio dydžio krovinys į uostą.",
+    postedAt: "prieš 1 d.",
+    matchingTransports: 1,
   },
 ]
 
@@ -192,9 +198,9 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Content — NO Link wrapper */}
+          {/* Content */}
           <div className="flex gap-5">
-            <div className="flex-1 min-w-0 space-y-1.5">
+            <div className="flex-1 min-w-0 space-y-3">
               {DASHBOARD_CARGOS.map(cargo => (
                 <div
                   key={cargo.id}
