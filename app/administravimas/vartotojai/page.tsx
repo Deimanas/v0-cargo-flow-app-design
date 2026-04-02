@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   Users,
   Search,
@@ -57,6 +58,7 @@ const ROLE_CONFIG = {
 }
 
 export default function UsersPage() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [roleFilter, setRoleFilter] = useState("all")
@@ -178,7 +180,11 @@ export default function UsersPage() {
                 const status = STATUS_CONFIG[user.status as keyof typeof STATUS_CONFIG]
                 const role = ROLE_CONFIG[user.role as keyof typeof ROLE_CONFIG]
                 return (
-                  <tr key={user.id} className="hover:bg-muted/20 transition-colors">
+                    <tr 
+                      key={user.id} 
+                      onClick={() => router.push(`/administravimas/vartotojai/${user.id}`)}
+                      className="hover:bg-muted/20 transition-colors cursor-pointer"
+                    >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0">
@@ -229,9 +235,13 @@ export default function UsersPage() {
                         {user.lastLogin || "—"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
-                        <button className="p-2 hover:bg-muted rounded-lg transition-colors" title="Peržiūrėti">
+                        <button 
+                          onClick={() => router.push(`/administravimas/vartotojai/${user.id}`)}
+                          className="p-2 hover:bg-muted rounded-lg transition-colors" 
+                          title="Peržiūrėti"
+                        >
                           <Eye className="w-4 h-4 text-muted-foreground" />
                         </button>
                         <button className="p-2 hover:bg-muted rounded-lg transition-colors" title="Siųsti pranešimą">
