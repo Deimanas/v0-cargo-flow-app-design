@@ -46,7 +46,7 @@ const FLAG_URLS: Record<string, string> = {
 function Flag({ country }: { country: string }) {
   const url = FLAG_URLS[country]
   if (!url) return <span className="w-6 h-4 rounded-sm bg-muted inline-block" />
-  return <Image src={url} alt={country} width={24} height={16} className="rounded-sm object-cover" unoptimized loading="eager" />
+  return <Image src={url} alt={country} width={24} height={16} className="rounded-sm object-cover w-auto h-auto" unoptimized loading="eager" />
 }
 
 const STATUS_MAP = {
