@@ -6,39 +6,87 @@ import {
   MapPin, 
   Calendar, 
   ChevronDown,
-  Truck,
-  RefreshCw,
-  Eye
+  ChevronRight,
+  MoreVertical,
+  Eye,
+  RefreshCw
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 
-const mockTransports = [
-  {
-    id: "1",
-    from: { city: "Utena", country: "LT", address: "Utena, Lietuva, 28193, LT" },
-    to: { city: "Klaipėda", country: "LT", address: "Klaipėda, Lietuva, 91100, LT" },
-    loadDate: "2026-04-02",
-    unloadDate: "2026-04-02 – 2026-04-03",
-    price: 950,
-    priceNegotiable: true,
-    company: "UAB \"VARLE\"",
-    rating: 0,
-    distance: 331,
-    matchingCargo: 1,
-  },
+const loadingTypes = [
+  { id: "galas", label: "Galas" },
+  { id: "virsus", label: "Viršus" },
+  { id: "sonas", label: "Šonas" },
 ]
 
-const countryFlags: Record<string, string> = {
-  LT: "🇱🇹",
-  LV: "🇱🇻",
-  EE: "🇪🇪",
-  PL: "🇵🇱",
-  DE: "🇩🇪",
+const packingTypes = [
+  { id: "pilnas", label: "Pilnas" },
+  { id: "dalinis", label: "Dalinis" },
+]
+
+const features = [
+  { id: "adr", label: "ADR" },
+  { id: "tir", label: "TIR" },
+  { id: "liftas", label: "Liftas" },
+  { id: "manipuliatorius", label: "Manipuliatorius" },
+]
+
+const priceTypes = [
+  { id: "fiksuota", label: "Fiksuota" },
+  { id: "derinama", label: "Derinama" },
+  { id: "pagal_uzklausa", label: "Pagal užklausą" },
+]
+
+const mockTransport = {
+  id: "1",
+  company: "UAB \"VARLE\"",
+  rating: 0,
+  status: "Paskelbtas",
+  publishedAt: "2026-03-28 10:33",
+  views: 0,
+  price: 950,
+  priceNegotiable: true,
+  from: {
+    city: "Utena",
+    address: "Utena, Lietuva, 28193, LT",
+    date: "2026-04-02",
+  },
+  to: {
+    city: "Klaipėda",
+    address: "Klaipėda, Lietuva, 91100, LT",
+    dateRange: "2026-04-02 – 2026-04-03",
+  },
+  distance: 331,
+  matchingCargo: {
+    route: "Utena → Klaipėda",
+    company: "UAB dfsdfsdsf",
+    rating: 0,
+    price: 1040,
+    weight: 7.6,
+    date: "balandžio 2 d.",
+    type: "Bendroji",
+  },
 }
 
 export default function TransportasPage() {
-  const [showForm, setShowForm] = useState(false)
+  const [selectedLoadingTypes, setSelectedLoadingTypes] = useState<string[]>(["galas"])
+  const [selectedPackingType, setSelectedPackingType] = useState("pilnas")
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
+  const [selectedPriceType, setSelectedPriceType] = useState("fiksuota")
+  const [price, setPrice] = useState("500")
+
+  const toggleLoadingType = (id: string) => {
+    setSelectedLoadingTypes(prev => 
+      prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
+    )
+  }
+
+  const toggleFeature = (id: string) => {
+    setSelectedFeatures(prev => 
+      prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -46,244 +94,263 @@ export default function TransportasPage() {
 
       <main className="lg:pl-64 pt-16 lg:pt-0">
         <div className="p-4 lg:p-6">
-          <div className="max-w-4xl mx-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Transportas</h1>
-                <p className="text-sm text-muted-foreground">Jūsų transporto pasiūlymai</p>
-              </div>
-              <button 
-                onClick={() => setShowForm(!showForm)}
-                className="px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors flex items-center gap-2"
-              >
-                <Truck className="w-4 h-4" />
-                Siūlyti savo transportą
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-6">
+            <Link href="/" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+              <ChevronRight className="w-5 h-5 rotate-180" />
+              <span className="text-sm">Atgal</span>
+            </Link>
+            <h1 className="text-lg font-semibold text-foreground">Siūlyti savo transportą</h1>
+          </div>
+
+          <div className="max-w-2xl mx-auto space-y-6">
+            {/* Recurring Route Section */}
+            <div className="bg-card rounded-2xl border border-border p-5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                Pasikartojantis maršrutas
+              </p>
+              <p className="text-sm text-foreground mb-1">
+                Greitas maršruto užpildymas ir automatinis savaitinis skelbimas
+              </p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Dar neturite išsaugotų maršrutų.
+              </p>
+              <button className="flex items-center gap-2 w-full justify-center py-3 border border-border rounded-xl text-sm font-medium hover:bg-muted transition-colors">
+                <RefreshCw className="w-4 h-4" />
+                Išsaugoti dabartinę formą kaip maršrutą
               </button>
             </div>
 
-            {/* Form */}
-            {showForm && (
-              <div className="bg-card rounded-2xl border border-border p-5 mb-6">
-                <h2 className="font-semibold text-foreground mb-4">Siūlyti savo transportą</h2>
-                
-                {/* Recurring Route */}
-                <div className="p-4 bg-muted/50 rounded-xl mb-6">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                    Pasikartojantis maršrutas
-                  </p>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Greitas maršruto užpildymas ir automatinis savaitinis skelbimas
-                  </p>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Dar neturite išsaugotų maršrutų.
-                  </p>
-                  <button className="flex items-center gap-2 px-4 py-2 border border-border rounded-xl text-sm font-medium hover:bg-muted transition-colors">
-                    <RefreshCw className="w-4 h-4" />
-                    Išsaugoti dabartinę formą kaip maršrutą
-                  </button>
-                </div>
-
-                {/* Loading */}
-                <div className="mb-6">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                    Pakrovimas
-                  </p>
-                  <div className="grid md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="text-sm text-muted-foreground mb-1.5 block">Šalis *</label>
-                      <div className="relative">
-                        <select className="w-full px-4 py-2.5 bg-muted border-0 rounded-xl text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20">
-                          <option>🇱🇹 LT</option>
-                          <option>🇱🇻 LV</option>
-                          <option>🇪🇪 EE</option>
-                          <option>🇵🇱 PL</option>
-                          <option>🇩🇪 DE</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm text-muted-foreground mb-1.5 block">Miestas *</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Vilnius..."
-                          className="flex-1 px-4 py-2.5 bg-muted border-0 rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                        />
-                        <button className="p-2.5 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors">
-                          <MapPin className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1.5 block">Pakrovimo datos *</label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <input
-                        type="text"
-                        placeholder="Pasirinkite datą"
-                        className="w-full pl-10 pr-4 py-2.5 bg-muted border-0 rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      />
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Delivery */}
-                <div className="mb-6">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                    Pristatymas
-                  </p>
-                  <div className="grid md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="text-sm text-muted-foreground mb-1.5 block">Šalis *</label>
-                      <div className="relative">
-                        <select className="w-full px-4 py-2.5 bg-muted border-0 rounded-xl text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20">
-                          <option>🇱🇹 LT</option>
-                          <option>🇱🇻 LV</option>
-                          <option>🇪🇪 EE</option>
-                          <option>🇵🇱 PL</option>
-                          <option>🇩🇪 DE</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm text-muted-foreground mb-1.5 block">Miestas *</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Berlin..."
-                          className="flex-1 px-4 py-2.5 bg-muted border-0 rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                        />
-                        <button className="p-2.5 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors">
-                          <MapPin className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-1.5 block">Pristatymo datos *</label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <input
-                        type="text"
-                        placeholder="Pasirinkite datą"
-                        className="w-full pl-10 pr-4 py-2.5 bg-muted border-0 rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      />
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Vehicle Capacity */}
-                <div className="mb-6">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                    Transporto talpinimas
-                  </p>
-                  <label className="text-sm text-muted-foreground mb-1.5 block">Krovinio rūšis *</label>
+            {/* Loading Section */}
+            <div className="bg-card rounded-2xl border border-border p-5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">
+                Pakrovimas
+              </p>
+              
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1.5 block">Šalis *</label>
                   <div className="relative">
-                    <select className="w-full px-4 py-2.5 bg-muted border-0 rounded-xl text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20">
-                      <option>Pasirinkite...</option>
-                      <option>Bendras</option>
-                      <option>Šaldomas</option>
-                      <option>ADR</option>
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-xl">
+                      <span>🇱🇹</span>
+                      <span className="text-sm">LT</span>
+                    </div>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   </div>
                 </div>
-
-                <button className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
-                  <Truck className="w-5 h-5" />
-                  Siūlyti savo transportą
-                </button>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1.5 block">Miestas *</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Vilnius..."
+                      className="flex-1 px-4 py-3 bg-muted border-0 rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                    <button className="p-3 bg-primary text-primary-foreground rounded-xl">
+                      <MapPin className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
               </div>
-            )}
 
-            {/* Transport List */}
-            <div className="space-y-4">
-              {mockTransports.map((transport) => (
-                <div key={transport.id} className="bg-card rounded-2xl border border-border overflow-hidden">
-                  {/* Header */}
-                  <div className="p-4 border-b border-border">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">
-                          Paskelbtas
-                        </span>
-                        <span className="text-xs text-muted-foreground">2026-03-28 10:33</span>
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Eye className="w-3.5 h-3.5" /> 0
-                        </span>
-                      </div>
-                    </div>
-                    <p className="font-medium text-foreground">{transport.company} ★ — (0)</p>
-                    <p className="text-xl font-bold text-foreground mt-2">
-                      💶 {transport.price} € <span className="text-sm font-normal text-muted-foreground">Derinama</span>
-                    </p>
-                  </div>
-
-                  {/* Route */}
-                  <div className="p-4 border-b border-border">
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3">
-                        <div className="flex flex-col items-center">
-                          <span className="w-2 h-2 rounded-full bg-primary" />
-                          <div className="w-0.5 h-12 bg-border my-1" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground uppercase">Pakrovimas</p>
-                          <p className="font-semibold text-foreground">{transport.from.city}</p>
-                          <p className="text-sm text-muted-foreground">{transport.from.address}</p>
-                          <p className="text-sm text-muted-foreground">{transport.loadDate}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <span className="w-2 h-2 rounded-full bg-green-500" />
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground uppercase">Pristatymas</p>
-                          <p className="font-semibold text-foreground">{transport.to.city}</p>
-                          <p className="text-sm text-muted-foreground">{transport.to.address}</p>
-                          <p className="text-sm text-muted-foreground">{transport.unloadDate}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Map */}
-                  <div className="h-48 bg-muted flex items-center justify-center">
-                    <p className="text-muted-foreground">Žemėlapio vaizdas</p>
-                  </div>
-
-                  {/* Matching Cargo */}
-                  {transport.matchingCargo > 0 && (
-                    <div className="p-4 border-t border-border">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                        Atitinkantys kroviniai ({transport.matchingCargo})
-                      </p>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Rodomi kroviniai, kurie šiuo metu atitinka šį transporto pasiūlymą.
-                      </p>
-                      <Link 
-                        href="/kroviniai/6"
-                        className="flex items-center justify-between p-3 bg-muted/50 rounded-xl hover:bg-muted transition-colors"
-                      >
-                        <div>
-                          <p className="font-medium text-foreground">Utena → Klaipėda</p>
-                          <p className="text-sm text-muted-foreground">UAB dfsdfsdsf</p>
-                          <p className="text-xs text-muted-foreground">★ — (0) · Bendroji · 7.6 t · balandžio 2 d.</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold text-foreground">💶 1 040 € Derinama</p>
-                        </div>
-                      </Link>
-                    </div>
-                  )}
+              <div>
+                <label className="text-sm text-muted-foreground mb-1.5 block">Pakrovimo datos *</label>
+                <div className="relative">
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Pasirinkite datą"
+                    className="w-full pl-11 pr-4 py-3 bg-muted border-0 rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 </div>
-              ))}
+              </div>
             </div>
+
+            {/* Delivery Section */}
+            <div className="bg-card rounded-2xl border border-border p-5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">
+                Pristatymas
+              </p>
+              
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1.5 block">Šalis *</label>
+                  <div className="relative">
+                    <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-xl">
+                      <span>🇱🇹</span>
+                      <span className="text-sm">LT</span>
+                    </div>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1.5 block">Miestas *</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Berlin..."
+                      className="flex-1 px-4 py-3 bg-muted border-0 rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                    <button className="p-3 bg-primary text-primary-foreground rounded-xl">
+                      <MapPin className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm text-muted-foreground mb-1.5 block">Pristatymo datos *</label>
+                <div className="relative">
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Pasirinkite datą"
+                    className="w-full pl-11 pr-4 py-3 bg-muted border-0 rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                </div>
+              </div>
+            </div>
+
+            {/* Transport Capacity Section */}
+            <div className="bg-card rounded-2xl border border-border p-5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">
+                Transporto talpinimas
+              </p>
+              
+              <div className="mb-4">
+                <label className="text-sm text-muted-foreground mb-2 block">Krovinio rūšis *</label>
+                <div className="relative">
+                  <select className="w-full px-4 py-3 bg-muted border-0 rounded-xl text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20">
+                    <option>Pasirinkite...</option>
+                    <option>Bendras</option>
+                    <option>Šaldomas</option>
+                    <option>ADR</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="text-sm text-muted-foreground mb-2 block">Pakrovimo rūšis *</label>
+                <div className="flex flex-wrap gap-2">
+                  {loadingTypes.map((type) => (
+                    <button
+                      key={type.id}
+                      onClick={() => toggleLoadingType(type.id)}
+                      className={cn(
+                        "px-4 py-2 rounded-full text-sm font-medium border transition-colors",
+                        selectedLoadingTypes.includes(type.id)
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-card border-border text-foreground hover:bg-muted"
+                      )}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="text-sm text-muted-foreground mb-2 block">Pakrovimo tipas *</label>
+                <div className="flex flex-wrap gap-2">
+                  {packingTypes.map((type) => (
+                    <button
+                      key={type.id}
+                      onClick={() => setSelectedPackingType(type.id)}
+                      className={cn(
+                        "px-4 py-2 rounded-full text-sm font-medium border transition-colors",
+                        selectedPackingType === type.id
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-card border-border text-foreground hover:bg-muted"
+                      )}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm text-muted-foreground mb-2 block">Savybės</label>
+                <div className="flex flex-wrap gap-2">
+                  {features.map((feature) => (
+                    <button
+                      key={feature.id}
+                      onClick={() => toggleFeature(feature.id)}
+                      className={cn(
+                        "px-4 py-2 rounded-full text-sm font-medium border transition-colors",
+                        selectedFeatures.includes(feature.id)
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-card border-border text-foreground hover:bg-muted"
+                      )}
+                    >
+                      {feature.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Price Section */}
+            <div className="bg-card rounded-2xl border border-border p-5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">
+                Kaina
+              </p>
+              
+              <div className="mb-4">
+                <label className="text-sm text-muted-foreground mb-1.5 block">Suma (EUR)</label>
+                <input
+                  type="text"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className="w-full px-4 py-3 bg-muted border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-muted-foreground mb-2 block">Kainos tipas</label>
+                <div className="flex flex-wrap gap-2">
+                  {priceTypes.map((type) => (
+                    <button
+                      key={type.id}
+                      onClick={() => setSelectedPriceType(type.id)}
+                      className={cn(
+                        "px-4 py-2 rounded-full text-sm font-medium border transition-colors",
+                        selectedPriceType === type.id
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-card border-border text-foreground hover:bg-muted"
+                      )}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Description Section */}
+            <div className="bg-card rounded-2xl border border-border p-5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">
+                Aprašymas
+              </p>
+              
+              <textarea
+                rows={4}
+                placeholder="Papildoma informacija apie transporto pasiūlymą..."
+                className="w-full px-4 py-3 bg-muted border-0 rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+              />
+              <p className="text-xs text-muted-foreground text-right mt-1">0/300</p>
+            </div>
+
+            {/* Submit Button */}
+            <button className="w-full py-4 bg-primary text-primary-foreground rounded-2xl font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+              Siūlyti savo transportą
+            </button>
           </div>
         </div>
       </main>

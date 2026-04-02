@@ -1,51 +1,46 @@
 "use client"
 
 import { 
-  ArrowLeft, 
-  Bookmark, 
-  Eye, 
-  Calendar, 
+  ChevronRight,
+  MoreVertical,
+  Eye,
+  Calendar,
   MessageCircle,
   Phone,
   Mail,
-  MapPin,
   Package,
-  Scale,
   Box,
-  Layers,
   Ruler,
   Truck,
-  Clock,
-  FileText,
-  ExternalLink
+  FileText
 } from "lucide-react"
 import Link from "next/link"
 
 interface CargoDetailProps {
   cargo: {
     id: string
+    status: "active" | "expired" | "negotiable"
+    publishedAt: string
+    views: number
     title: string
+    company: string
+    rating: number
+    price: number | null
+    priceNegotiable: boolean
+    description?: string
+    requirements?: string
     from: {
       city: string
       country: string
       address: string
       date: string
-      time?: string
     }
     to: {
       city: string
       country: string
       address: string
       date: string
-      time?: string
     }
-    price: number | null
-    priceNegotiable: boolean
-    status: "active" | "expired" | "negotiable"
-    views: number
-    publishedAt: string
-    description?: string
-    requirements?: string
     cargo: {
       type: string
       weight: number
@@ -56,13 +51,6 @@ interface CargoDetailProps {
     }
     vehicle: string
     distance: number
-    publisher: {
-      name: string
-      company?: string
-      phone: string
-      email: string
-    }
-    reference?: string
     tags: string[]
   }
 }
@@ -73,297 +61,197 @@ const countryFlags: Record<string, string> = {
   EE: "🇪🇪",
   PL: "🇵🇱",
   DE: "🇩🇪",
-  NL: "🇳🇱",
 }
 
 export function CargoDetail({ cargo }: CargoDetailProps) {
   return (
-    <div className="max-w-5xl mx-auto">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-        <Link href="/kroviniai" className="hover:text-primary">
-          Kroviniai
+    <div className="max-w-2xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <Link 
+          href="/kroviniai" 
+          className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+        >
+          <ChevronRight className="w-5 h-5 rotate-180" />
+          <span className="text-sm">Atgal</span>
         </Link>
-        <span>/</span>
-        <span className="text-foreground">{cargo.from.city} → {cargo.to.city}</span>
+        <button className="p-2 hover:bg-muted rounded-lg">
+          <MoreVertical className="w-5 h-5 text-muted-foreground" />
+        </button>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* Header Card */}
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h1 className="text-xl font-bold text-foreground mb-1">
-                  {cargo.from.city} → {cargo.to.city}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  {cargo.title}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {cargo.from.address} → {cargo.to.address}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className={`px-2 py-1 rounded-full ${
-                  cargo.status === "active" ? "bg-green-100 text-green-700" :
-                  cargo.status === "negotiable" ? "bg-yellow-100 text-yellow-700" :
-                  "bg-red-100 text-red-700"
-                }`}>
-                  {cargo.status === "active" ? "Aktyvus" : 
-                   cargo.status === "negotiable" ? "Derinama" : "Pasibaigęs"}
-                </span>
-              </div>
-            </div>
+      {/* Status Bar */}
+      <div className="flex items-center gap-3 mb-4">
+        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+          cargo.status === "active" ? "bg-primary/10 text-primary" :
+          cargo.status === "negotiable" ? "bg-yellow-100 text-yellow-700" :
+          "bg-muted text-muted-foreground"
+        }`}>
+          {cargo.status === "active" ? "Paskelbtas" : 
+           cargo.status === "negotiable" ? "Derinama" : "Pasibaigęs"}
+        </span>
+        <span className="text-xs text-muted-foreground flex items-center gap-1">
+          <Calendar className="w-3.5 h-3.5" />
+          {cargo.publishedAt}
+        </span>
+        <span className="text-xs text-muted-foreground flex items-center gap-1">
+          <Eye className="w-3.5 h-3.5" />
+          {cargo.views}
+        </span>
+      </div>
 
-            {/* Tags */}
-            <div className="flex flex-wrap gap-2">
-              {cargo.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="px-3 py-1.5 bg-muted rounded-lg text-xs font-medium text-muted-foreground"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
+      {/* Company Info */}
+      <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-medium text-foreground">{cargo.title}</p>
+            <p className="text-sm text-muted-foreground">Paskelbė: {cargo.company} ★ — ({cargo.rating})</p>
           </div>
+          <ChevronRight className="w-5 h-5 text-muted-foreground" />
+        </div>
+      </div>
 
-          {/* Route Card */}
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <MapPin className="w-5 h-5 text-primary" />
-              <h2 className="font-semibold text-foreground">Maršrutas</h2>
+      {/* Price */}
+      <div className="flex items-center gap-3 mb-6">
+        <span className="text-2xl">💶</span>
+        <span className="text-2xl font-bold text-foreground">
+          {cargo.price ? `${cargo.price.toLocaleString("lt-LT").replace(",", " ")} €` : "—"}
+        </span>
+        {cargo.priceNegotiable && (
+          <span className="px-2 py-1 bg-muted rounded-lg text-xs text-muted-foreground">
+            Derinama
+          </span>
+        )}
+      </div>
+
+      {/* Description Section */}
+      {cargo.description && (
+        <div className="bg-card rounded-2xl border border-border p-5 mb-4">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+            Aprašymas
+          </p>
+          <p className="text-sm text-foreground">{cargo.description}</p>
+          {cargo.requirements && (
+            <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2">
+              <span className="text-amber-500">ⓘ</span>
+              <p className="text-sm text-amber-700">{cargo.requirements}</p>
             </div>
+          )}
+        </div>
+      )}
 
-            <div className="grid md:grid-cols-2 gap-4 mb-4">
-              {/* From */}
-              <div className="p-4 bg-muted/50 rounded-xl">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="w-2 h-2 rounded-full bg-primary" />
-                  <span className="text-xs font-medium text-primary uppercase">Pakrovimas</span>
-                </div>
-                <p className="font-semibold text-foreground mb-1">
-                  {countryFlags[cargo.from.country]} {cargo.from.city}, {cargo.from.country}
-                </p>
-                <p className="text-sm text-muted-foreground mb-2">{cargo.from.address}</p>
-                <p className="text-sm text-muted-foreground">
-                  {cargo.from.date}{cargo.from.time && ` ${cargo.from.time}`}
-                </p>
-              </div>
-
-              {/* To */}
-              <div className="p-4 bg-muted/50 rounded-xl">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="w-2 h-2 rounded-full bg-green-500" />
-                  <span className="text-xs font-medium text-green-600 uppercase">Iškrovimas</span>
-                </div>
-                <p className="font-semibold text-foreground mb-1">
-                  {countryFlags[cargo.to.country]} {cargo.to.city}, {cargo.to.country}
-                </p>
-                <p className="text-sm text-muted-foreground mb-2">{cargo.to.address}</p>
-                <p className="text-sm text-muted-foreground">
-                  {cargo.to.date}{cargo.to.time && ` ${cargo.to.time}`}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>Atstumas keliais: <strong className="text-foreground">{cargo.distance} km</strong></span>
-              <span className="text-muted-foreground">pagal navigaciją (OSRM)</span>
-            </div>
-
-            {/* Map Links */}
-            <div className="flex gap-2 mt-4">
-              <button className="px-4 py-2 border border-border rounded-xl text-sm font-medium hover:bg-muted transition-colors flex items-center gap-2">
-                <ExternalLink className="w-4 h-4" />
-                Google Maps
-              </button>
-              <button className="px-4 py-2 border border-border rounded-xl text-sm font-medium hover:bg-muted transition-colors flex items-center gap-2">
-                <ExternalLink className="w-4 h-4" />
-                Waze
-              </button>
-              <button className="px-4 py-2 border border-border rounded-xl text-sm font-medium hover:bg-muted transition-colors flex items-center gap-2">
-                <ExternalLink className="w-4 h-4" />
-                OSM
-              </button>
-            </div>
-
-            {/* Map placeholder */}
-            <div className="mt-4 h-64 bg-muted rounded-xl flex items-center justify-center">
-              <p className="text-muted-foreground">Žemėlapio vaizdas</p>
-            </div>
+      {/* Cargo Data Grid */}
+      <div className="bg-card rounded-2xl border border-border p-5 mb-4">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">
+          Krovinio duomenys
+        </p>
+        <div className="grid grid-cols-3 gap-4">
+          {/* Type */}
+          <div className="flex flex-col items-center p-4 bg-muted/50 rounded-xl">
+            <Package className="w-6 h-6 text-muted-foreground mb-2" />
+            <span className="text-xs text-muted-foreground mb-1">Tipas</span>
+            <span className="text-sm font-medium text-foreground">{cargo.cargo.type}</span>
           </div>
-
-          {/* Cargo Details Card */}
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Package className="w-5 h-5 text-green-500" />
-              <h2 className="font-semibold text-foreground">Krovinys</h2>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex justify-between py-2 border-b border-border">
-                <span className="text-muted-foreground">Tipas</span>
-                <span className="font-medium text-primary">{cargo.cargo.type}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-border">
-                <span className="text-muted-foreground">Svoris</span>
-                <span className="font-medium text-primary">{cargo.cargo.weight} t ({(cargo.cargo.weight * 1000).toLocaleString()} kg)</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-border">
-                <span className="text-muted-foreground">Tūris</span>
-                <span className="text-foreground">{cargo.cargo.volume} m³</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-border">
-                <span className="text-muted-foreground">Padėklai</span>
-                <span className="font-medium text-primary">{cargo.cargo.pallets} vnt.</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-border">
-                <span className="text-muted-foreground">Krovos metrai</span>
-                <span className="font-medium text-primary">{cargo.cargo.ldm} ldm</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-border">
-                <span className="text-muted-foreground">Transporto priemonė</span>
-                <span className="font-medium text-primary">{cargo.vehicle}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-border">
-                <span className="text-muted-foreground">Pakrovimo būdas</span>
-                <span className="text-foreground">{cargo.cargo.loadingType}</span>
-              </div>
-              {cargo.requirements && (
-                <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Specialūs reikalavimai</span>
-                  <span className="font-medium text-primary">{cargo.requirements}</span>
-                </div>
-              )}
-              {cargo.reference && (
-                <div className="flex justify-between py-2">
-                  <span className="text-muted-foreground">Ref. numeris</span>
-                  <span className="text-foreground">{cargo.reference}</span>
-                </div>
-              )}
-            </div>
-
-            {cargo.description && (
-              <div className="mt-4 p-4 bg-muted/50 rounded-xl">
-                <p className="text-sm text-muted-foreground">{cargo.description}</p>
-              </div>
-            )}
+          {/* Weight */}
+          <div className="flex flex-col items-center p-4 bg-muted/50 rounded-xl">
+            <svg className="w-6 h-6 text-muted-foreground mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 3v18M3 12h18M7 7l10 10M17 7L7 17" />
+            </svg>
+            <span className="text-xs text-muted-foreground mb-1">Svoris</span>
+            <span className="text-sm font-medium text-foreground">{cargo.cargo.weight} t</span>
           </div>
-
-          {/* Offers Card */}
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-lg">💬</span>
-              <h2 className="font-semibold text-foreground">Pasiūlymai (0)</h2>
-            </div>
-
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="text-4xl mb-3">📭</div>
-              <p className="text-muted-foreground">Pasiūlymų dar nėra</p>
-            </div>
+          {/* Volume */}
+          <div className="flex flex-col items-center p-4 bg-muted/50 rounded-xl">
+            <Box className="w-6 h-6 text-muted-foreground mb-2" />
+            <span className="text-xs text-muted-foreground mb-1">Tūris</span>
+            <span className="text-sm font-medium text-foreground">{cargo.cargo.volume} m³</span>
           </div>
-
-          {/* History Card */}
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Clock className="w-5 h-5 text-primary" />
-              <h2 className="font-semibold text-foreground">Istorija</h2>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex justify-between py-2 border-b border-border">
-                <span className="text-muted-foreground">Sukurta</span>
-                <span className="font-medium text-primary">{cargo.publishedAt}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-border">
-                <span className="text-muted-foreground">Paskelbta</span>
-                <span className="font-medium text-primary">{cargo.publishedAt}</span>
-              </div>
-              <div className="flex justify-between py-2">
-                <span className="text-muted-foreground">Peržiūros</span>
-                <span className="text-foreground">{cargo.views}</span>
-              </div>
-            </div>
+          {/* LDM */}
+          <div className="flex flex-col items-center p-4 bg-muted/50 rounded-xl">
+            <Ruler className="w-6 h-6 text-muted-foreground mb-2" />
+            <span className="text-xs text-muted-foreground mb-1">LDM</span>
+            <span className="text-sm font-medium text-foreground">{cargo.cargo.ldm} ldm</span>
+          </div>
+          {/* Pallets */}
+          <div className="flex flex-col items-center p-4 bg-muted/50 rounded-xl">
+            <svg className="w-6 h-6 text-muted-foreground mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="M2 10h20M8 4v16M16 4v16" />
+            </svg>
+            <span className="text-xs text-muted-foreground mb-1">Paletės</span>
+            <span className="text-sm font-medium text-foreground">{cargo.cargo.pallets}</span>
+          </div>
+          {/* Loading */}
+          <div className="flex flex-col items-center p-4 bg-muted/50 rounded-xl">
+            <Truck className="w-6 h-6 text-muted-foreground mb-2" />
+            <span className="text-xs text-muted-foreground mb-1">Pakrovimas</span>
+            <span className="text-sm font-medium text-foreground">{cargo.cargo.loadingType}</span>
           </div>
         </div>
+      </div>
 
-        {/* Sidebar */}
+      {/* Route Section */}
+      <div className="bg-card rounded-2xl border border-border p-5 mb-4">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">
+          Maršrutas
+        </p>
+        
         <div className="space-y-4">
-          {/* Price Card */}
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">💶</span>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">
-                    {cargo.price ? `${cargo.price.toLocaleString("lt-LT")} EUR` : "Derinama"}
-                  </p>
-                  {cargo.priceNegotiable && (
-                    <p className="text-xs text-muted-foreground">Derinama</p>
-                  )}
-                </div>
-              </div>
-              <button className="px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors flex items-center gap-2">
-                <MessageCircle className="w-4 h-4" />
-                Rašyti
-              </button>
+          {/* From */}
+          <div className="flex items-start gap-3">
+            <div className="flex flex-col items-center">
+              <span className="w-3 h-3 rounded-full bg-primary" />
+              <div className="w-0.5 h-16 bg-border my-1" />
             </div>
-
-            <div className="space-y-3 pt-4 border-t border-border">
-              <p className="font-semibold text-foreground">{cargo.publisher.name}</p>
-              <p className="text-sm text-muted-foreground">Paskelbė: <span className="text-foreground">{cargo.publisher.company || cargo.publisher.name}</span></p>
-              <div className="flex items-center gap-2 text-sm">
-                <Phone className="w-4 h-4 text-muted-foreground" />
-                <a href={`tel:${cargo.publisher.phone}`} className="text-primary hover:underline">
-                  {cargo.publisher.phone}
-                </a>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Mail className="w-4 h-4 text-muted-foreground" />
-                <a href={`mailto:${cargo.publisher.email}`} className="text-primary hover:underline">
-                  {cargo.publisher.email}
-                </a>
-              </div>
-            </div>
-
-            <button className="w-full mt-4 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors">
-              Skelbti iš naujo
-            </button>
-          </div>
-
-          {/* Summary Card */}
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <FileText className="w-5 h-5 text-primary" />
-              <h2 className="font-semibold text-foreground">Santrauka</h2>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Scale className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm text-foreground">{cargo.cargo.weight} t</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Calendar className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm text-foreground">Pakr. {cargo.from.date.split("-").slice(1).join("-")}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Truck className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm text-foreground">{cargo.vehicle}</span>
-              </div>
+            <div className="flex-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase mb-1">Pakrovimas</p>
+              <p className="font-semibold text-foreground">{cargo.from.city}</p>
+              <p className="text-sm text-muted-foreground">{cargo.from.address}</p>
+              <p className="text-sm text-muted-foreground">{cargo.from.date}</p>
             </div>
           </div>
 
-          {/* Bookmark */}
-          <button className="w-full flex items-center justify-center gap-2 py-3 border border-border rounded-xl text-sm font-medium hover:bg-muted transition-colors">
-            <Bookmark className="w-4 h-4" />
-            Įsiminti
-          </button>
+          {/* To */}
+          <div className="flex items-start gap-3">
+            <span className="w-3 h-3 rounded-full bg-green-500" />
+            <div className="flex-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase mb-1">Pristatymas</p>
+              <p className="font-semibold text-foreground">{cargo.to.city}</p>
+              <p className="text-sm text-muted-foreground">{cargo.to.address}</p>
+              <p className="text-sm text-muted-foreground">{cargo.to.date}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Distance */}
+        <div className="mt-4 pt-4 border-t border-border flex items-center gap-2 text-sm text-muted-foreground">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 12h18M3 12l4-4M3 12l4 4M21 12l-4-4M21 12l-4 4" />
+          </svg>
+          <span>{cargo.distance} km · ~{Math.round(cargo.distance / 80 * 60)} min</span>
         </div>
       </div>
+
+      {/* Map Placeholder */}
+      <div className="bg-card rounded-2xl border border-border overflow-hidden mb-6">
+        <div className="h-48 bg-muted flex items-center justify-center">
+          <p className="text-muted-foreground">Žemėlapio vaizdas</p>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="fixed bottom-0 left-0 right-0 lg:relative lg:bottom-auto p-4 bg-card border-t border-border lg:border-0 lg:bg-transparent lg:p-0 flex gap-3">
+        <button className="flex-1 py-3.5 bg-primary text-primary-foreground rounded-2xl font-medium hover:bg-primary/90 transition-colors">
+          Siūlyti kainą
+        </button>
+        <button className="flex-1 py-3.5 bg-muted text-foreground rounded-2xl font-medium hover:bg-muted/80 transition-colors flex items-center justify-center gap-2">
+          <MessageCircle className="w-5 h-5" />
+          Rašyti
+        </button>
+      </div>
+
+      {/* Spacer for fixed buttons on mobile */}
+      <div className="h-20 lg:hidden" />
     </div>
   )
 }

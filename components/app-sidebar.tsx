@@ -31,6 +31,28 @@ const navigation = [
   { name: "Administravimas", href: "/administravimas", icon: Settings },
 ]
 
+function CargoFlowLogo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 40 40" fill="none" className={className}>
+      <rect width="40" height="40" rx="10" fill="#F97316" />
+      <path
+        d="M12 20C12 15.5817 15.5817 12 20 12C24.4183 12 28 15.5817 28 20"
+        stroke="white"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+      <path
+        d="M28 20C28 24.4183 24.4183 28 20 28C15.5817 28 12 24.4183 12 20"
+        stroke="white"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeDasharray="4 4"
+      />
+      <circle cx="20" cy="20" r="3" fill="white" />
+    </svg>
+  )
+}
+
 export function AppSidebar() {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -40,9 +62,7 @@ export function AppSidebar() {
       {/* Mobile header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <Package className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <CargoFlowLogo className="w-8 h-8" />
           <div>
             <h1 className="font-semibold text-foreground">CargoFlow</h1>
           </div>
@@ -72,9 +92,7 @@ export function AppSidebar() {
         {/* Logo */}
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-              <Package className="w-6 h-6 text-primary-foreground" />
-            </div>
+            <CargoFlowLogo className="w-10 h-10" />
             <div>
               <h1 className="font-semibold text-foreground">CargoFlow</h1>
               <p className="text-xs text-muted-foreground">Krovinių birža</p>
@@ -101,7 +119,8 @@ export function AppSidebar() {
           </p>
           <ul className="space-y-1">
             {navigation.map((item) => {
-              const isActive = pathname === item.href
+              const isActive = pathname === item.href || 
+                (item.href !== "/" && pathname.startsWith(item.href))
               return (
                 <li key={item.name}>
                   <Link
@@ -126,8 +145,12 @@ export function AppSidebar() {
         {/* User */}
         <div className="p-4 border-t border-border">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-              <User className="w-5 h-5 text-muted-foreground" />
+            <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center overflow-hidden">
+              <img 
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_8515-TT3KyeQ9Cpm3pMIayISPdf5rPDVhmN.webp"
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">Deimanas S.</p>
