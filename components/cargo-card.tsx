@@ -50,8 +50,9 @@ function CountryFlag({ country }: { country: string }) {
       alt={country}
       width={20}
       height={14}
-      className="rounded-sm object-cover"
+      className="rounded-sm object-cover w-auto h-auto"
       unoptimized
+      loading="eager"
     />
   )
 }

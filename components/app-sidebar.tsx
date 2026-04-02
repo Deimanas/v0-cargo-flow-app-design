@@ -19,7 +19,7 @@ import {
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 
-const navigation = [
+const navItems = [
   { name: "Valdymo skydas", href: "/", icon: LayoutDashboard },
   { name: "Kroviniai", href: "/kroviniai", icon: Package },
   { name: "Transportas", href: "/transportas", icon: Truck },
@@ -118,7 +118,7 @@ export function AppSidebar() {
             Navigacija
           </p>
           <ul className="space-y-1">
-            {navigation.map((item) => {
+            {navItems.map((item) => {
               const isActive = pathname === item.href || 
                 (item.href !== "/" && pathname.startsWith(item.href))
               return (

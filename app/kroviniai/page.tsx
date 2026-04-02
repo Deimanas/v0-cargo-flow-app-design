@@ -3,8 +3,8 @@
 import { AppSidebar } from "@/components/app-sidebar"
 import { CargoCard } from "@/components/cargo-card"
 import { FilterPanel } from "@/components/filter-panel"
-import { Bell, Bookmark, Search, SlidersHorizontal, X } from "lucide-react"
-import { useState } from "react"
+import { Bell, Bookmark, Search, SlidersHorizontal, X, MapPin } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 
@@ -100,10 +100,38 @@ const filterTabs = [
   { id: "all", label: "Visi" },
 ]
 
+const searchSuggestions = [
+  { city: "Vilnius", country: "LT" },
+  { city: "Kaunas", country: "LT" },
+  { city: "Klaipėda", country: "LT" },
+  { city: "Šiauliai", country: "LT" },
+  { city: "Panevėžys", country: "LT" },
+  { city: "Alytus", country: "LT" },
+  { city: "Marijampolė", country: "LT" },
+  { city: "Utena", country: "LT" },
+]
+
 export default function KroviniaiPage() {
   const [activeTab, setActiveTab] = useState("published")
   const [showFilters, setShowFilters] = useState(true)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [showSearchResults, setShowSearchResults] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
+
+  const filteredSuggestions = searchSuggestions.filter(s => 
+    s.city.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSearchResults(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
@@ -125,15 +153,56 @@ export default function KroviniaiPage() {
             </button>
           </div>
 
-          {/* Search Bar with inline filter toggle */}
+          {/* Search Bar with dropdown results */}
           <div className="flex gap-3 mb-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <div className="flex-1 relative" ref={searchRef}>
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setShowSearchResults(true)
+                }}
+                onFocus={() => setShowSearchResults(true)}
                 placeholder="Ieškoti pagal kilmės miestą..."
                 className="w-full pl-12 pr-4 py-3.5 bg-card border border-border rounded-2xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
               />
+              
+              {/* Search Results Dropdown */}
+              {showSearchResults && searchQuery && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-2xl shadow-xl shadow-black/20 overflow-hidden z-50">
+                  <div className="p-2">
+                    <p className="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Miestai
+                    </p>
+                    {filteredSuggestions.length > 0 ? (
+                      filteredSuggestions.map((suggestion) => (
+                        <button
+                          key={suggestion.city}
+                          onClick={() => {
+                            setSearchQuery(suggestion.city)
+                            setShowSearchResults(false)
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary transition-colors text-left"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <MapPin className="w-4 h-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">{suggestion.city}</p>
+                            <p className="text-xs text-muted-foreground">{suggestion.country === "LT" ? "Lietuva" : suggestion.country}</p>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <p className="px-3 py-4 text-sm text-muted-foreground text-center">
+                        Nieko nerasta
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
             {/* Mobile filter button */}
             <button 
@@ -178,9 +247,9 @@ export default function KroviniaiPage() {
 
           {/* Content */}
           <div className="flex gap-6">
-            {/* Cargo List */}
+            {/* Cargo List - Single Column */}
             <div className="flex-1 min-w-0">
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="space-y-4">
                 {mockCargos.map((cargo) => (
                   <Link key={cargo.id} href={`/kroviniai/${cargo.id}`}>
                     <CargoCard {...cargo} />
@@ -191,8 +260,10 @@ export default function KroviniaiPage() {
 
             {/* Filters - Desktop (collapsible on right) */}
             {showFilters && (
-              <div className="hidden lg:block w-72 shrink-0">
-                <FilterPanel />
+              <div className="hidden lg:block w-80 shrink-0">
+                <div className="sticky top-6">
+                  <FilterPanel />
+                </div>
               </div>
             )}
           </div>
@@ -204,7 +275,7 @@ export default function KroviniaiPage() {
                 className="lg:hidden fixed inset-0 bg-black/50 z-40"
                 onClick={() => setShowMobileFilters(false)}
               />
-              <div className="lg:hidden fixed inset-0 bg-card z-50 overflow-y-auto">
+              <div className="lg:hidden fixed inset-0 bg-card z-50 overflow-hidden">
                 <FilterPanel 
                   isModal 
                   onClose={() => setShowMobileFilters(false)} 

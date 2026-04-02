@@ -183,8 +183,10 @@ export default function HomePage() {
 
             {/* Filters - Desktop (collapsible on right) */}
             {showFilters && (
-              <div className="hidden lg:block w-72 shrink-0">
-                <FilterPanel />
+              <div className="hidden lg:block w-80 shrink-0">
+                <div className="sticky top-6">
+                  <FilterPanel />
+                </div>
               </div>
             )}
           </div>
