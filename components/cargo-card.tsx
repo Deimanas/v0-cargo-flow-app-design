@@ -1,6 +1,6 @@
 "use client"
 
-import { Bookmark, Eye, Package, MapPin, Calendar, Phone, Mail, Weight, ArrowRight } from "lucide-react"
+import { Bookmark, Eye, Package, MapPin, Calendar, Phone, Mail, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 import { useState } from "react"
@@ -23,7 +23,7 @@ interface CargoCardProps {
   onClick?: () => void
 }
 
-const countryFlagUrls: Record<string, string> = {
+const FLAG_URLS: Record<string, string> = {
   LT: "https://flagcdn.com/w40/lt.png",
   LV: "https://flagcdn.com/w40/lv.png",
   EE: "https://flagcdn.com/w40/ee.png",
@@ -34,13 +34,13 @@ const countryFlagUrls: Record<string, string> = {
   FR: "https://flagcdn.com/w40/fr.png",
 }
 
-function CountryFlag({ country }: { country: string }) {
-  const url = countryFlagUrls[country]
-  if (!url) return <span className="inline-block w-5 h-3.5 rounded-sm bg-muted" />
+function FlagIcon({ code }: { code: string }) {
+  const src = FLAG_URLS[code]
+  if (!src) return <span className="inline-block w-5 h-3.5 rounded-sm bg-muted" />
   return (
     <Image
-      src={url}
-      alt={country}
+      src={src}
+      alt={code}
       width={20}
       height={14}
       className="rounded-sm object-cover"
@@ -50,97 +50,101 @@ function CountryFlag({ country }: { country: string }) {
   )
 }
 
-const STATUS_STYLES = {
-  active:     "bg-emerald-50 text-emerald-700 border-emerald-200",
-  negotiable: "bg-amber-50 text-amber-700 border-amber-200",
-  expired:    "bg-slate-100 text-slate-500 border-slate-200",
-}
-const STATUS_LABELS = {
-  active: "Aktyvus", negotiable: "Derinama", expired: "Pasibaigęs",
+const STATUS_MAP = {
+  active:     { style: "bg-emerald-50 text-emerald-700 border-emerald-200", label: "Aktyvus" },
+  negotiable: { style: "bg-amber-50 text-amber-700 border-amber-200",       label: "Derinama" },
+  expired:    { style: "bg-slate-100 text-slate-500 border-slate-200",       label: "Pasibaigęs" },
 }
 
 export function CargoCard({
-  from, to, distance, price, priceNegotiable, weight, date, status,
+  from, to, distance, price, weight, date, status,
   tags, views = 0, isBookmarked: initialBookmarked = false,
   description, contact,
 }: CargoCardProps) {
-  const [bookmarked, setBookmarked] = useState(initialBookmarked)
+  const [saved, setSaved] = useState(initialBookmarked)
 
-  const handleBookmark = (e: React.MouseEvent) => {
-    e.preventDefault(); e.stopPropagation()
-    setBookmarked(b => !b)
+  const toggleSave = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setSaved(prev => !prev)
   }
 
-  const cargoType = tags.find(t => !t.match(/^\d/) && !t.match(/t$/)) ?? tags[0]
+  const openPhone = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (contact?.phone) window.location.href = `tel:${contact.phone}`
+  }
+
+  const openEmail = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (contact?.email) window.location.href = `mailto:${contact.email}`
+  }
+
+  const cargoType = tags.find(t => !t.match(/^\d/) && !t.match(/t$/)) ?? tags[0] ?? "Krovinys"
+  const statusInfo = STATUS_MAP[status]
 
   return (
     <div className="group bg-card border border-border hover:border-primary/30 hover:shadow-sm transition-all rounded-xl overflow-hidden">
       {/* Main row */}
       <div className="flex items-center gap-0 divide-x divide-border">
-
-        {/* Route — fixed width so it never wraps weirdly */}
+        {/* Route */}
         <div className="flex items-center gap-3 px-5 py-4 min-w-0 flex-1">
-          {/* From */}
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-            <CountryFlag country={from.country} />
+            <FlagIcon code={from.country} />
             <span className="font-semibold text-sm text-foreground whitespace-nowrap">{from.city}</span>
           </div>
-
-          {/* Arrow connector — fixed 100px so cities stay close */}
           <div className="flex items-center w-[100px] shrink-0">
             <div className="flex-1 h-px bg-border" />
             <ArrowRight className="w-3.5 h-3.5 text-muted-foreground mx-1 shrink-0" />
             <div className="flex-1 h-px bg-border" />
           </div>
-
-          {/* To */}
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <CountryFlag country={to.country} />
+            <FlagIcon code={to.country} />
             <span className="font-semibold text-sm text-foreground whitespace-nowrap">{to.city}</span>
           </div>
         </div>
 
-        {/* Type badge */}
+        {/* Type */}
         <div className="px-4 py-4 shrink-0 hidden sm:flex items-center w-[110px]">
           <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md font-medium truncate">
             {cargoType}
           </span>
         </div>
 
-        {/* Meta: weight / distance / date */}
+        {/* Meta */}
         <div className="px-4 py-4 shrink-0 hidden md:flex items-center gap-4 text-xs text-muted-foreground w-[230px]">
           <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5" />{weight} t</span>
           <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{distance} km</span>
           <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{date}</span>
         </div>
 
-        {/* Contact */}
+        {/* Contact — using span+onClick, NOT anchor tags */}
         <div className="px-4 py-4 shrink-0 hidden lg:flex items-center gap-3 w-[200px]">
           {contact?.phone && (
-            <a
-              href={`tel:${contact.phone}`}
-              onClick={e => e.stopPropagation()}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors truncate"
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={openPhone}
+              onKeyDown={e => e.key === "Enter" && openPhone(e as unknown as React.MouseEvent)}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors truncate cursor-pointer"
             >
               <Phone className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">{contact.phone}</span>
-            </a>
+            </span>
           )}
         </div>
 
-        {/* Status + price */}
+        {/* Status + Price */}
         <div className="px-5 py-4 shrink-0 flex flex-col items-end gap-1.5 w-[160px]">
-          <span className={cn(
-            "text-xs font-medium px-2 py-0.5 rounded-full border",
-            STATUS_STYLES[status]
-          )}>
-            {STATUS_LABELS[status]}
+          <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full border", statusInfo.style)}>
+            {statusInfo.label}
           </span>
           {price ? (
             <p className="font-bold text-foreground text-base leading-tight">
-              {price.toLocaleString("lt-LT")} €
+              {price.toLocaleString("lt-LT")} &euro;
             </p>
           ) : (
             <p className="text-xs text-muted-foreground font-medium">Kaina derinama</p>
@@ -153,33 +157,34 @@ export function CargoCard({
         {/* Bookmark */}
         <div className="px-4 py-4 shrink-0">
           <button
-            onClick={handleBookmark}
+            type="button"
+            onClick={toggleSave}
             className={cn(
               "p-2 rounded-lg transition-colors",
-              bookmarked
-                ? "text-primary bg-primary/10"
-                : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+              saved ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary hover:bg-primary/5"
             )}
-            aria-label={bookmarked ? "Pašalinti iš išsaugotų" : "Išsaugoti"}
+            aria-label={saved ? "Pašalinti iš išsaugotų" : "Išsaugoti"}
           >
-            <Bookmark className={cn("w-4 h-4", bookmarked && "fill-current")} />
+            <Bookmark className={cn("w-4 h-4", saved && "fill-current")} />
           </button>
         </div>
       </div>
 
-      {/* Description strip — shown when present */}
+      {/* Description strip */}
       {description && (
         <div className="px-5 py-2.5 bg-muted/40 border-t border-border text-xs text-muted-foreground flex items-center justify-between gap-4">
           <span className="truncate">{description}</span>
           {contact?.email && (
-            <a
-              href={`mailto:${contact.email}`}
-              onClick={e => e.stopPropagation()}
-              className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors shrink-0"
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={openEmail}
+              onKeyDown={e => e.key === "Enter" && openEmail(e as unknown as React.MouseEvent)}
+              className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors shrink-0 cursor-pointer"
             >
               <Mail className="w-3.5 h-3.5" />
               {contact.email}
-            </a>
+            </span>
           )}
         </div>
       )}
