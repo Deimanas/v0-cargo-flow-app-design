@@ -3,7 +3,10 @@
 import { AppSidebar } from "@/components/app-sidebar"
 import { CargoCard } from "@/components/cargo-card"
 import { FilterPanel } from "@/components/filter-panel"
-import { Bell, Bookmark, Search, SlidersHorizontal, TrendingUp, Package, Truck, Users } from "lucide-react"
+import {
+  Bell, Bookmark, Search, SlidersHorizontal,
+  TrendingUp, Package, Truck, Users, Plus, ArrowUpRight,
+} from "lucide-react"
 import { useState } from "react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -17,7 +20,7 @@ const mockCargos = [
     price: 1320,
     priceNegotiable: false,
     weight: 11.8,
-    date: "balandžio 2 d.",
+    date: "bal. 2 d.",
     status: "active" as const,
     tags: ["Bendras", "Tentinė", "11.8 t"],
     views: 12,
@@ -31,7 +34,7 @@ const mockCargos = [
     price: 980,
     priceNegotiable: false,
     weight: 10,
-    date: "kovo 30 d.",
+    date: "kov. 30 d.",
     status: "active" as const,
     tags: ["Šaldomas", "Refrižeratorius", "10 t"],
     views: 8,
@@ -41,28 +44,28 @@ const mockCargos = [
     id: "6",
     from: { city: "Utena", country: "LT" },
     to: { city: "Klaipėda", country: "LT" },
-    distance: 331.1,
+    distance: 331,
     price: 1040,
     priceNegotiable: true,
     weight: 7.6,
-    date: "balandžio 2 d.",
+    date: "bal. 2 d.",
     status: "active" as const,
     tags: ["Bendroji", "Tentinė", "7.6 t"],
     views: 3,
-    description: "Vidutinio dydzio krovinys i uosta.",
+    description: "Vidutinio dydžio krovinys į uostą.",
   },
 ]
 
-const filterTabs = [
+const STATS = [
+  { label: "Aktyvūs kroviniai",  value: "2 847", icon: Package, trend: "+12%", color: "text-primary",  bg: "bg-primary/8" },
+  { label: "Laisvas transportas", value: "1 234", icon: Truck,   trend: "+8%",  color: "text-emerald-600", bg: "bg-emerald-50" },
+  { label: "Vežėjai šiandien",    value: "856",   icon: Users,   trend: "+5%",  color: "text-violet-600",  bg: "bg-violet-50" },
+]
+
+const FILTER_TABS = [
   { id: "saved", label: "Išsaugoti", icon: Bookmark },
   { id: "published", label: "Paskelbti" },
   { id: "all", label: "Visi" },
-]
-
-const stats = [
-  { label: "Aktyvūs kroviniai", value: "2,847", icon: Package, trend: "+12%" },
-  { label: "Laisvas transportas", value: "1,234", icon: Truck, trend: "+8%" },
-  { label: "Vežėjai", value: "856", icon: Users, trend: "+5%" },
 ]
 
 export default function HomePage() {
@@ -74,140 +77,135 @@ export default function HomePage() {
     <div className="min-h-screen bg-background">
       <AppSidebar />
 
-      <main className="lg:pl-64 pt-16 lg:pt-0">
-        <div className="p-4 lg:p-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+      <main className="lg:pl-60 pt-14 lg:pt-0">
+        <div className="p-4 lg:p-6 max-w-[1440px] mx-auto">
+
+          {/* Page header */}
+          <div className="flex items-center justify-between mb-5">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Valdymo skydas</h1>
-              <p className="text-sm text-muted-foreground mt-1">Sveiki sugrįžę, Deimanai</p>
+              <h1 className="text-xl font-bold text-foreground tracking-tight">Valdymo skydas</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">Sveiki sugrįžę, Deimanai</p>
             </div>
-            <button className="relative p-2.5 bg-card border border-border rounded-xl hover:bg-muted transition-colors">
-              <Bell className="w-5 h-5 text-muted-foreground" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-white text-xs rounded-full flex items-center justify-center font-medium">
-                5
-              </span>
-            </button>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/transportas"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Siūlyti transportą
+              </Link>
+              <button className="relative p-2 bg-card border border-border rounded-lg hover:bg-muted transition-colors">
+                <Bell className="w-4 h-4 text-muted-foreground" />
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-white text-[10px] rounded-full flex items-center justify-center font-bold leading-none">5</span>
+              </button>
+            </div>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            {stats.map((stat) => (
-              <div key={stat.label} className="bg-card rounded-2xl border border-border p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="p-2.5 bg-primary/10 rounded-xl">
-                    <stat.icon className="w-5 h-5 text-primary" />
-                  </div>
-                  <span className="flex items-center gap-1 text-xs text-green-400 font-medium">
-                    <TrendingUp className="w-3.5 h-3.5" />
-                    {stat.trend}
-                  </span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+            {STATS.map(stat => (
+              <div key={stat.label} className="bg-card rounded-xl border border-border p-4 flex items-center gap-4">
+                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", stat.bg)}>
+                  <stat.icon className={cn("w-5 h-5", stat.color)} />
                 </div>
-                <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-2xl font-bold text-foreground leading-tight">{stat.value}</p>
+                  <p className="text-xs text-muted-foreground truncate">{stat.label}</p>
+                </div>
+                <span className="flex items-center gap-1 text-xs text-emerald-600 font-semibold shrink-0">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  {stat.trend}
+                </span>
               </div>
             ))}
           </div>
 
-          {/* Recent Cargos Section */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">Naujausi kroviniai</h2>
-            <Link href="/kroviniai" className="text-sm text-primary hover:underline font-medium">
-              Žiūrėti visus
+          {/* Section title */}
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-foreground">Naujausi kroviniai</h2>
+            <Link href="/kroviniai" className="flex items-center gap-1 text-xs text-primary hover:underline font-medium">
+              Žiūrėti visus <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          {/* Search Bar with inline filter toggle */}
-          <div className="flex gap-3 mb-4">
+          {/* Search */}
+          <div className="flex gap-2 mb-3">
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Ieškoti pagal kilmės miestą..."
-                className="w-full pl-12 pr-4 py-3.5 bg-card border border-border rounded-2xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
+                placeholder="Ieškoti pagal kilmės miestą…"
+                className="w-full pl-9 pr-4 py-2.5 bg-card border border-border rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
               />
             </div>
-            {/* Mobile filter button */}
-            <button 
+            <button
               onClick={() => setShowMobileFilters(true)}
-              className="lg:hidden p-3.5 bg-card border border-border rounded-2xl hover:bg-muted transition-colors"
+              className="lg:hidden p-2.5 bg-card border border-border rounded-lg hover:bg-muted transition-colors"
             >
-              <SlidersHorizontal className="w-5 h-5 text-muted-foreground" />
+              <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
             </button>
-            {/* Desktop filter toggle */}
-            <button 
-              onClick={() => setShowFilters(!showFilters)}
+            <button
+              onClick={() => setShowFilters(f => !f)}
               className={cn(
-                "hidden lg:flex items-center gap-2 px-4 py-3.5 border rounded-2xl transition-colors",
-                showFilters 
-                  ? "bg-primary/10 border-primary/30 text-primary" 
+                "hidden lg:flex items-center gap-1.5 px-3 py-2.5 border rounded-lg text-sm font-medium transition-colors",
+                showFilters
+                  ? "bg-primary/8 border-primary/25 text-primary"
                   : "bg-card border-border text-muted-foreground hover:bg-muted"
               )}
             >
-              <SlidersHorizontal className="w-5 h-5" />
-              <span className="text-sm font-medium">Filtrai</span>
+              <SlidersHorizontal className="w-4 h-4" />
+              Filtrai
             </button>
           </div>
 
-          {/* Filter Tabs */}
-          <div className="flex items-center gap-2 mb-6">
-            {filterTabs.map((tab) => (
+          {/* Tabs */}
+          <div className="flex items-center gap-1.5 mb-4">
+            {FILTER_TABS.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
                   activeTab === tab.id
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                    : "bg-card border border-border text-foreground hover:bg-muted"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
-                {tab.icon && <tab.icon className="w-4 h-4" />}
+                {tab.icon && <tab.icon className={cn("w-3 h-3", activeTab === tab.id && "fill-current")} />}
                 {tab.label}
               </button>
             ))}
           </div>
 
           {/* Content */}
-          <div className="flex gap-6">
-            {/* Cargo List */}
-            <div className="flex-1 min-w-0">
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {mockCargos.map((cargo) => (
-                  <Link key={cargo.id} href={`/kroviniai/${cargo.id}`}>
-                    <CargoCard {...cargo} />
-                  </Link>
-                ))}
-              </div>
+          <div className="flex gap-5">
+            <div className="flex-1 min-w-0 space-y-1.5">
+              {mockCargos.map(cargo => (
+                <Link key={cargo.id} href={`/kroviniai/${cargo.id}`} className="block">
+                  <CargoCard {...cargo} />
+                </Link>
+              ))}
             </div>
 
-            {/* Filters - Desktop (collapsible on right) */}
             {showFilters && (
-              <div className="hidden lg:block w-80 shrink-0">
-                <div className="sticky top-6">
+              <div className="hidden lg:block w-72 shrink-0">
+                <div className="sticky top-4">
                   <FilterPanel />
                 </div>
               </div>
             )}
           </div>
-
-          {/* Filters - Mobile Modal */}
-          {showMobileFilters && (
-            <>
-              <div
-                className="lg:hidden fixed inset-0 bg-black/50 z-40"
-                onClick={() => setShowMobileFilters(false)}
-              />
-              <div className="lg:hidden fixed inset-0 bg-card z-50 overflow-y-auto">
-                <FilterPanel 
-                  isModal 
-                  onClose={() => setShowMobileFilters(false)} 
-                />
-              </div>
-            </>
-          )}
         </div>
       </main>
+
+      {showMobileFilters && (
+        <>
+          <div className="lg:hidden fixed inset-0 bg-black/40 z-40 backdrop-blur-sm" onClick={() => setShowMobileFilters(false)} />
+          <div className="lg:hidden fixed inset-0 bg-card z-50 overflow-hidden">
+            <FilterPanel isModal onClose={() => setShowMobileFilters(false)} />
+          </div>
+        </>
+      )}
     </div>
   )
 }

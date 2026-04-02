@@ -2,351 +2,261 @@
 
 import { AppSidebar } from "@/components/app-sidebar"
 import { useState } from "react"
-import { 
-  MapPin, 
-  Calendar, 
-  ChevronDown,
-  ChevronRight,
-  MoreVertical,
-  Eye,
-  RefreshCw
-} from "lucide-react"
+import { MapPin, Calendar, ChevronDown, RefreshCw, ArrowLeft } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 
-const loadingTypes = [
-  { id: "galas", label: "Galas" },
+const LOADING_TYPES = [
+  { id: "galas",  label: "Galas" },
   { id: "virsus", label: "Viršus" },
-  { id: "sonas", label: "Šonas" },
+  { id: "sonas",  label: "Šonas" },
 ]
-
-const packingTypes = [
-  { id: "pilnas", label: "Pilnas" },
-  { id: "dalinis", label: "Dalinis" },
+const PACKING_TYPES = [
+  { id: "pilnas",   label: "Pilnas" },
+  { id: "dalinis",  label: "Dalinis" },
 ]
-
-const features = [
-  { id: "adr", label: "ADR" },
-  { id: "tir", label: "TIR" },
-  { id: "liftas", label: "Liftas" },
+const FEATURES = [
+  { id: "adr",           label: "ADR" },
+  { id: "tir",           label: "TIR" },
+  { id: "liftas",        label: "Liftas" },
   { id: "manipuliatorius", label: "Manipuliatorius" },
 ]
-
-const priceTypes = [
-  { id: "fiksuota", label: "Fiksuota" },
-  { id: "derinama", label: "Derinama" },
+const PRICE_TYPES = [
+  { id: "fiksuota",      label: "Fiksuota" },
+  { id: "derinama",      label: "Derinama" },
   { id: "pagal_uzklausa", label: "Pagal užklausą" },
 ]
 
-const mockTransport = {
-  id: "1",
-  company: "UAB \"VARLE\"",
-  rating: 0,
-  status: "Paskelbtas",
-  publishedAt: "2026-03-28 10:33",
-  views: 0,
-  price: 950,
-  priceNegotiable: true,
-  from: {
-    city: "Utena",
-    address: "Utena, Lietuva, 28193, LT",
-    date: "2026-04-02",
-  },
-  to: {
-    city: "Klaipėda",
-    address: "Klaipėda, Lietuva, 91100, LT",
-    dateRange: "2026-04-02 – 2026-04-03",
-  },
-  distance: 331,
-  matchingCargo: {
-    route: "Utena → Klaipėda",
-    company: "UAB dfsdfsdsf",
-    rating: 0,
-    price: 1040,
-    weight: 7.6,
-    date: "balandžio 2 d.",
-    type: "Bendroji",
-  },
+function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div className="px-5 py-3 bg-muted/40 border-b border-border">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{title}</p>
+      </div>
+      <div className="p-5 space-y-4">{children}</div>
+    </div>
+  )
+}
+
+function FormInput({ label, placeholder, type = "text", icon, required }: {
+  label: string; placeholder: string; type?: string; icon?: React.ReactNode; required?: boolean
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-foreground mb-1.5">
+        {label}{required && <span className="text-destructive ml-0.5">*</span>}
+      </label>
+      <div className="relative">
+        {icon && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{icon}</span>}
+        <input
+          type={type}
+          placeholder={placeholder}
+          className={cn(
+            "w-full py-2.5 bg-background border border-border rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-colors",
+            icon ? "pl-9 pr-4" : "px-4"
+          )}
+        />
+      </div>
+    </div>
+  )
+}
+
+function ChipSelector({
+  options,
+  value,
+  onChange,
+  multi = false,
+}: {
+  options: { id: string; label: string }[]
+  value: string | string[]
+  onChange: (v: string | string[]) => void
+  multi?: boolean
+}) {
+  const isActive = (id: string) => Array.isArray(value) ? value.includes(id) : value === id
+
+  const toggle = (id: string) => {
+    if (multi && Array.isArray(value)) {
+      onChange(value.includes(id) ? value.filter(v => v !== id) : [...value, id])
+    } else {
+      onChange(id)
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map(opt => (
+        <button
+          key={opt.id}
+          type="button"
+          onClick={() => toggle(opt.id)}
+          className={cn(
+            "px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+            isActive(opt.id)
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-background border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  )
 }
 
 export default function TransportasPage() {
-  const [selectedLoadingTypes, setSelectedLoadingTypes] = useState<string[]>(["galas"])
-  const [selectedPackingType, setSelectedPackingType] = useState("pilnas")
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
-  const [selectedPriceType, setSelectedPriceType] = useState("fiksuota")
+  const [loadingTypes, setLoadingTypes] = useState<string[]>(["galas"])
+  const [packingType, setPackingType] = useState("pilnas")
+  const [features, setFeatures] = useState<string[]>([])
+  const [priceType, setPriceType] = useState("fiksuota")
   const [price, setPrice] = useState("500")
-
-  const toggleLoadingType = (id: string) => {
-    setSelectedLoadingTypes(prev => 
-      prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
-    )
-  }
-
-  const toggleFeature = (id: string) => {
-    setSelectedFeatures(prev => 
-      prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
-    )
-  }
 
   return (
     <div className="min-h-screen bg-background">
       <AppSidebar />
 
-      <main className="lg:pl-64 pt-16 lg:pt-0">
-        <div className="p-4 lg:p-6">
+      <main className="lg:pl-60 pt-14 lg:pt-0">
+        <div className="p-4 lg:p-6 max-w-[1440px] mx-auto">
+
           {/* Header */}
-          <div className="flex items-center gap-3 mb-6">
-            <Link href="/" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
-              <ChevronRight className="w-5 h-5 rotate-180" />
-              <span className="text-sm">Atgal</span>
+          <div className="flex items-center gap-3 mb-5">
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Atgal
             </Link>
-            <h1 className="text-lg font-semibold text-foreground">Siūlyti savo transportą</h1>
+            <span className="text-border">|</span>
+            <h1 className="text-xl font-bold text-foreground tracking-tight">Siūlyti transportą</h1>
           </div>
 
-          <div className="max-w-2xl mx-auto space-y-6">
-            {/* Recurring Route Section */}
-            <div className="bg-card rounded-2xl border border-border p-5">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                Pasikartojantis maršrutas
+          <div className="max-w-xl space-y-4">
+
+            {/* Recurring route */}
+            <FormSection title="Pasikartojantis maršrutas">
+              <p className="text-sm text-muted-foreground">
+                Dar neturite išsaugotų maršrutų. Užpildykite formą ir išsaugokite.
               </p>
-              <p className="text-sm text-foreground mb-1">
-                Greitas maršruto užpildymas ir automatinis savaitinis skelbimas
-              </p>
-              <p className="text-sm text-muted-foreground mb-4">
-                Dar neturite išsaugotų maršrutų.
-              </p>
-              <button className="flex items-center gap-2 w-full justify-center py-3 border border-border rounded-xl text-sm font-medium hover:bg-muted transition-colors">
+              <button
+                type="button"
+                className="flex items-center gap-2 w-full justify-center py-2.5 border border-dashed border-border rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
                 <RefreshCw className="w-4 h-4" />
-                Išsaugoti dabartinę formą kaip maršrutą
+                Išsaugoti kaip maršrutą
               </button>
-            </div>
+            </FormSection>
 
-            {/* Loading Section */}
-            <div className="bg-card rounded-2xl border border-border p-5">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">
-                Pakrovimas
-              </p>
-              
-              <div className="grid grid-cols-2 gap-3 mb-4">
+            {/* Loading */}
+            <FormSection title="Pakrovimas">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm text-muted-foreground mb-1.5 block">Šalis *</label>
+                  <label className="block text-xs font-medium text-foreground mb-1.5">Šalis <span className="text-destructive">*</span></label>
                   <div className="relative">
-                    <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-xl">
-                      <span>🇱🇹</span>
-                      <span className="text-sm">LT</span>
+                    <div className="flex items-center gap-2 px-3 py-2.5 bg-background border border-border rounded-lg cursor-pointer hover:border-primary/40 transition-colors">
+                      <span className="text-base">🇱🇹</span>
+                      <span className="text-sm text-foreground font-medium">LT</span>
                     </div>
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   </div>
                 </div>
-                <div>
-                  <label className="text-sm text-muted-foreground mb-1.5 block">Miestas *</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Vilnius..."
-                      className="flex-1 px-4 py-3 bg-muted border-0 rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                    <button className="p-3 bg-primary text-primary-foreground rounded-xl">
-                      <MapPin className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
+                <FormInput label="Miestas" placeholder="Vilnius…" required
+                  icon={<MapPin className="w-3.5 h-3.5" />} />
               </div>
+              <FormInput label="Pakrovimo data" placeholder="Pasirinkite datą…" required
+                icon={<Calendar className="w-3.5 h-3.5" />} />
+            </FormSection>
 
-              <div>
-                <label className="text-sm text-muted-foreground mb-1.5 block">Pakrovimo datos *</label>
-                <div className="relative">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="text"
-                    placeholder="Pasirinkite datą"
-                    className="w-full pl-11 pr-4 py-3 bg-muted border-0 rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  />
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                </div>
-              </div>
-            </div>
-
-            {/* Delivery Section */}
-            <div className="bg-card rounded-2xl border border-border p-5">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">
-                Pristatymas
-              </p>
-              
-              <div className="grid grid-cols-2 gap-3 mb-4">
+            {/* Delivery */}
+            <FormSection title="Pristatymas">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm text-muted-foreground mb-1.5 block">Šalis *</label>
+                  <label className="block text-xs font-medium text-foreground mb-1.5">Šalis <span className="text-destructive">*</span></label>
                   <div className="relative">
-                    <div className="flex items-center gap-2 px-4 py-3 bg-muted rounded-xl">
-                      <span>🇱🇹</span>
-                      <span className="text-sm">LT</span>
+                    <div className="flex items-center gap-2 px-3 py-2.5 bg-background border border-border rounded-lg cursor-pointer hover:border-primary/40 transition-colors">
+                      <span className="text-base">🇩🇪</span>
+                      <span className="text-sm text-foreground font-medium">DE</span>
                     </div>
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   </div>
                 </div>
-                <div>
-                  <label className="text-sm text-muted-foreground mb-1.5 block">Miestas *</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Berlin..."
-                      className="flex-1 px-4 py-3 bg-muted border-0 rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                    <button className="p-3 bg-primary text-primary-foreground rounded-xl">
-                      <MapPin className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
+                <FormInput label="Miestas" placeholder="Berlin…" required
+                  icon={<MapPin className="w-3.5 h-3.5" />} />
               </div>
+              <FormInput label="Pristatymo data" placeholder="Pasirinkite datą…" required
+                icon={<Calendar className="w-3.5 h-3.5" />} />
+            </FormSection>
 
+            {/* Capacity */}
+            <FormSection title="Transporto talpinimas">
               <div>
-                <label className="text-sm text-muted-foreground mb-1.5 block">Pristatymo datos *</label>
+                <label className="block text-xs font-medium text-foreground mb-1.5">Krovinio rūšis <span className="text-destructive">*</span></label>
                 <div className="relative">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="text"
-                    placeholder="Pasirinkite datą"
-                    className="w-full pl-11 pr-4 py-3 bg-muted border-0 rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  />
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                </div>
-              </div>
-            </div>
-
-            {/* Transport Capacity Section */}
-            <div className="bg-card rounded-2xl border border-border p-5">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">
-                Transporto talpinimas
-              </p>
-              
-              <div className="mb-4">
-                <label className="text-sm text-muted-foreground mb-2 block">Krovinio rūšis *</label>
-                <div className="relative">
-                  <select className="w-full px-4 py-3 bg-muted border-0 rounded-xl text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20">
-                    <option>Pasirinkite...</option>
+                  <select className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20">
+                    <option value="">Pasirinkite…</option>
                     <option>Bendras</option>
                     <option>Šaldomas</option>
                     <option>ADR</option>
+                    <option>Negabaritinis</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                 </div>
               </div>
 
-              <div className="mb-4">
-                <label className="text-sm text-muted-foreground mb-2 block">Pakrovimo rūšis *</label>
-                <div className="flex flex-wrap gap-2">
-                  {loadingTypes.map((type) => (
-                    <button
-                      key={type.id}
-                      onClick={() => toggleLoadingType(type.id)}
-                      className={cn(
-                        "px-4 py-2 rounded-full text-sm font-medium border transition-colors",
-                        selectedLoadingTypes.includes(type.id)
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-card border-border text-foreground hover:bg-muted"
-                      )}
-                    >
-                      {type.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <label className="text-sm text-muted-foreground mb-2 block">Pakrovimo tipas *</label>
-                <div className="flex flex-wrap gap-2">
-                  {packingTypes.map((type) => (
-                    <button
-                      key={type.id}
-                      onClick={() => setSelectedPackingType(type.id)}
-                      className={cn(
-                        "px-4 py-2 rounded-full text-sm font-medium border transition-colors",
-                        selectedPackingType === type.id
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-card border-border text-foreground hover:bg-muted"
-                      )}
-                    >
-                      {type.label}
-                    </button>
-                  ))}
-                </div>
+              <div>
+                <label className="block text-xs font-medium text-foreground mb-1.5">Pakrovimo rūšis <span className="text-destructive">*</span></label>
+                <ChipSelector options={LOADING_TYPES} value={loadingTypes}
+                  onChange={v => setLoadingTypes(v as string[])} multi />
               </div>
 
               <div>
-                <label className="text-sm text-muted-foreground mb-2 block">Savybės</label>
-                <div className="flex flex-wrap gap-2">
-                  {features.map((feature) => (
-                    <button
-                      key={feature.id}
-                      onClick={() => toggleFeature(feature.id)}
-                      className={cn(
-                        "px-4 py-2 rounded-full text-sm font-medium border transition-colors",
-                        selectedFeatures.includes(feature.id)
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-card border-border text-foreground hover:bg-muted"
-                      )}
-                    >
-                      {feature.label}
-                    </button>
-                  ))}
+                <label className="block text-xs font-medium text-foreground mb-1.5">Pakrovimo tipas <span className="text-destructive">*</span></label>
+                <ChipSelector options={PACKING_TYPES} value={packingType}
+                  onChange={v => setPackingType(v as string)} />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-foreground mb-1.5">Savybės</label>
+                <ChipSelector options={FEATURES} value={features}
+                  onChange={v => setFeatures(v as string[])} multi />
+              </div>
+            </FormSection>
+
+            {/* Price */}
+            <FormSection title="Kaina">
+              <div>
+                <label className="block text-xs font-medium text-foreground mb-1.5">Suma (EUR)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">€</span>
+                  <input
+                    type="number"
+                    value={price}
+                    onChange={e => setPrice(e.target.value)}
+                    className="w-full pl-8 pr-4 py-2.5 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
+                  />
                 </div>
               </div>
-            </div>
+              <div>
+                <label className="block text-xs font-medium text-foreground mb-1.5">Kainos tipas</label>
+                <ChipSelector options={PRICE_TYPES} value={priceType}
+                  onChange={v => setPriceType(v as string)} />
+              </div>
+            </FormSection>
 
-            {/* Price Section */}
-            <div className="bg-card rounded-2xl border border-border p-5">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">
-                Kaina
-              </p>
-              
-              <div className="mb-4">
-                <label className="text-sm text-muted-foreground mb-1.5 block">Suma (EUR)</label>
-                <input
-                  type="text"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  className="w-full px-4 py-3 bg-muted border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            {/* Description */}
+            <FormSection title="Aprašymas">
+              <div>
+                <textarea
+                  rows={4}
+                  placeholder="Papildoma informacija apie transporto pasiūlymą…"
+                  className="w-full px-4 py-3 bg-background border border-border rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                 />
+                <p className="text-[10px] text-muted-foreground text-right mt-1">0/300</p>
               </div>
+            </FormSection>
 
-              <div>
-                <label className="text-sm text-muted-foreground mb-2 block">Kainos tipas</label>
-                <div className="flex flex-wrap gap-2">
-                  {priceTypes.map((type) => (
-                    <button
-                      key={type.id}
-                      onClick={() => setSelectedPriceType(type.id)}
-                      className={cn(
-                        "px-4 py-2 rounded-full text-sm font-medium border transition-colors",
-                        selectedPriceType === type.id
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-card border-border text-foreground hover:bg-muted"
-                      )}
-                    >
-                      {type.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Description Section */}
-            <div className="bg-card rounded-2xl border border-border p-5">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">
-                Aprašymas
-              </p>
-              
-              <textarea
-                rows={4}
-                placeholder="Papildoma informacija apie transporto pasiūlymą..."
-                className="w-full px-4 py-3 bg-muted border-0 rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
-              />
-              <p className="text-xs text-muted-foreground text-right mt-1">0/300</p>
-            </div>
-
-            {/* Submit Button */}
-            <button className="w-full py-4 bg-primary text-primary-foreground rounded-2xl font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            {/* Submit */}
+            <button className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
               Siūlyti savo transportą
