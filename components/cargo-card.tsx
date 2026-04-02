@@ -3,18 +3,14 @@
 import { Bookmark, Eye, Package, MapPin, Calendar, Phone, Mail, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
-import { useState, useCallback } from "react"
+import { useState } from "react"
 
-/* ─────────────────────────────────────────────────────────────
-   TYPES
-───────────────────────────────────────────────────────────── */
-interface CargoCardProps {
+interface CargoProps {
   id: string
-  from: { city: string; country: string; address?: string }
-  to: { city: string; country: string; address?: string }
+  from: { city: string; country: string }
+  to: { city: string; country: string }
   distance: number
   price: number | null
-  priceNegotiable?: boolean
   weight: number
   date: string
   status: "active" | "expired" | "negotiable"
@@ -25,135 +21,99 @@ interface CargoCardProps {
   contact?: { name: string; phone?: string; email?: string }
 }
 
-/* ─────────────────────────────────────────────────────────────
-   CONSTANTS
-───────────────────────────────────────────────────────────── */
-const COUNTRY_FLAGS: Record<string, string> = {
+const FLAG_IMAGES: Record<string, string> = {
   LT: "https://flagcdn.com/w40/lt.png",
   LV: "https://flagcdn.com/w40/lv.png",
   EE: "https://flagcdn.com/w40/ee.png",
   PL: "https://flagcdn.com/w40/pl.png",
   DE: "https://flagcdn.com/w40/de.png",
-  NL: "https://flagcdn.com/w40/nl.png",
-  BE: "https://flagcdn.com/w40/be.png",
-  FR: "https://flagcdn.com/w40/fr.png",
 }
 
-const STATUS_STYLES = {
-  active:     { className: "bg-emerald-50 text-emerald-700 border-emerald-200", text: "Aktyvus" },
-  negotiable: { className: "bg-amber-50 text-amber-700 border-amber-200",       text: "Derinama" },
-  expired:    { className: "bg-slate-100 text-slate-500 border-slate-200",       text: "Pasibaigęs" },
+const STATUS_CONFIG = {
+  active: { bg: "bg-emerald-50", fg: "text-emerald-700", border: "border-emerald-200", label: "Aktyvus" },
+  negotiable: { bg: "bg-amber-50", fg: "text-amber-700", border: "border-amber-200", label: "Derinama" },
+  expired: { bg: "bg-slate-100", fg: "text-slate-500", border: "border-slate-200", label: "Pasibaigęs" },
 }
 
-/* ─────────────────────────────────────────────────────────────
-   HELPERS
-───────────────────────────────────────────────────────────── */
-function CountryFlagImage({ countryCode }: { countryCode: string }) {
-  const flagSrc = COUNTRY_FLAGS[countryCode]
-  if (!flagSrc) return <span className="inline-block w-5 h-3.5 rounded-sm bg-muted" />
+function CountryFlagImg({ code }: { code: string }) {
+  const url = FLAG_IMAGES[code]
+  if (!url) return <span className="inline-block w-5 h-3.5 rounded-sm bg-slate-200" />
   return (
     <Image
-      src={flagSrc}
-      alt={countryCode}
+      src={url}
+      alt={code}
       width={20}
       height={14}
-      className="rounded-sm object-cover"
+      className="rounded-sm object-cover w-auto h-auto"
       unoptimized
-      loading="eager"
     />
   )
 }
 
-/* ─────────────────────────────────────────────────────────────
-   COMPONENT — NO ANCHOR TAGS, only span + onClick
-───────────────────────────────────────────────────────────── */
-export function CargoCard({
-  from,
-  to,
-  distance,
-  price,
-  weight,
-  date,
-  status,
-  tags,
-  views = 0,
-  isBookmarked: initialBookmarked = false,
-  description,
-  contact,
-}: CargoCardProps) {
-  const [bookmarked, setBookmarked] = useState(initialBookmarked)
-
-  const handleBookmarkClick = useCallback((evt: React.MouseEvent) => {
-    evt.preventDefault()
-    evt.stopPropagation()
-    setBookmarked(prev => !prev)
-  }, [])
-
-  const handlePhoneClick = useCallback((evt: React.MouseEvent) => {
-    evt.preventDefault()
-    evt.stopPropagation()
-    if (contact?.phone) {
-      window.open(`tel:${contact.phone}`, "_self")
-    }
-  }, [contact?.phone])
-
-  const handleEmailClick = useCallback((evt: React.MouseEvent) => {
-    evt.preventDefault()
-    evt.stopPropagation()
-    if (contact?.email) {
-      window.open(`mailto:${contact.email}`, "_self")
-    }
-  }, [contact?.email])
+export function CargoCard(props: CargoProps) {
+  const { from, to, distance, price, weight, date, status, tags, views = 0, isBookmarked = false, description, contact } = props
+  const [saved, setSaved] = useState(isBookmarked)
 
   const cargoType = tags.find(t => !t.match(/^\d/) && !t.match(/t$/)) ?? tags[0] ?? "Krovinys"
-  const statusData = STATUS_STYLES[status]
+  const st = STATUS_CONFIG[status]
+
+  function handleBookmark(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    setSaved(v => !v)
+  }
+
+  function handlePhone(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (contact?.phone) window.open(`tel:${contact.phone}`, "_self")
+  }
+
+  function handleEmail(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (contact?.email) window.open(`mailto:${contact.email}`, "_self")
+  }
 
   return (
-    <div className="group bg-card border border-border hover:border-primary/30 hover:shadow-sm transition-all rounded-xl overflow-hidden">
-      {/* Main row */}
-      <div className="flex items-center gap-0 divide-x divide-border">
-        {/* Route */}
-        <div className="flex items-center gap-3 px-5 py-4 min-w-0 flex-1">
+    <div className="group bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 hover:shadow-sm transition-all">
+      <div className="flex items-center divide-x divide-border">
+        <div className="flex items-center gap-3 px-5 py-4 flex-1 min-w-0">
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-            <CountryFlagImage countryCode={from.country} />
-            <span className="font-semibold text-sm text-foreground whitespace-nowrap">{from.city}</span>
+            <CountryFlagImg code={from.country} />
+            <span className="font-semibold text-sm text-foreground">{from.city}</span>
           </div>
-          <div className="flex items-center w-[100px] shrink-0">
-            <div className="flex-1 h-px bg-border" />
-            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground mx-1 shrink-0" />
-            <div className="flex-1 h-px bg-border" />
+          <div className="flex items-center w-24 shrink-0">
+            <span className="flex-1 h-px bg-border" />
+            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground mx-1" />
+            <span className="flex-1 h-px bg-border" />
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <CountryFlagImage countryCode={to.country} />
-            <span className="font-semibold text-sm text-foreground whitespace-nowrap">{to.city}</span>
+            <CountryFlagImg code={to.country} />
+            <span className="font-semibold text-sm text-foreground">{to.city}</span>
           </div>
         </div>
 
-        {/* Type */}
-        <div className="px-4 py-4 shrink-0 hidden sm:flex items-center w-[110px]">
-          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md font-medium truncate">
-            {cargoType}
-          </span>
+        <div className="hidden sm:flex px-4 py-4 w-28 shrink-0">
+          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md font-medium truncate">{cargoType}</span>
         </div>
 
-        {/* Meta */}
-        <div className="px-4 py-4 shrink-0 hidden md:flex items-center gap-4 text-xs text-muted-foreground w-[230px]">
+        <div className="hidden md:flex px-4 py-4 items-center gap-4 text-xs text-muted-foreground w-56 shrink-0">
           <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5" />{weight} t</span>
           <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{distance} km</span>
           <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{date}</span>
         </div>
 
-        {/* Contact — SPAN not anchor */}
-        <div className="px-4 py-4 shrink-0 hidden lg:flex items-center gap-3 w-[200px]">
+        <div className="hidden lg:flex px-4 py-4 items-center gap-3 w-48 shrink-0">
           {contact?.phone && (
             <span
               role="button"
               tabIndex={0}
-              onClick={handlePhoneClick}
-              onKeyDown={e => e.key === "Enter" && handlePhoneClick(e as unknown as React.MouseEvent)}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors truncate cursor-pointer"
+              onClick={handlePhone}
+              onKeyDown={e => e.key === "Enter" && handlePhone(e as unknown as React.MouseEvent)}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary cursor-pointer truncate"
             >
               <Phone className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">{contact.phone}</span>
@@ -161,40 +121,30 @@ export function CargoCard({
           )}
         </div>
 
-        {/* Status + Price */}
-        <div className="px-5 py-4 shrink-0 flex flex-col items-end gap-1.5 w-[160px]">
-          <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full border", statusData.className)}>
-            {statusData.text}
-          </span>
+        <div className="px-5 py-4 flex flex-col items-end gap-1.5 w-40 shrink-0">
+          <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full border", st.bg, st.fg, st.border)}>{st.label}</span>
           {price ? (
-            <p className="font-bold text-foreground text-base leading-tight">
-              {price.toLocaleString("lt-LT")} &euro;
-            </p>
+            <p className="font-bold text-foreground text-base">{price.toLocaleString("lt-LT")} &euro;</p>
           ) : (
             <p className="text-xs text-muted-foreground font-medium">Kaina derinama</p>
           )}
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Eye className="w-3 h-3" />{views}
-          </div>
+          <span className="flex items-center gap-1 text-xs text-muted-foreground"><Eye className="w-3 h-3" />{views}</span>
         </div>
 
-        {/* Bookmark */}
         <div className="px-4 py-4 shrink-0">
           <button
             type="button"
-            onClick={handleBookmarkClick}
+            onClick={handleBookmark}
             className={cn(
               "p-2 rounded-lg transition-colors",
-              bookmarked ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+              saved ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary hover:bg-primary/5"
             )}
-            aria-label={bookmarked ? "Pašalinti iš išsaugotų" : "Išsaugoti"}
           >
-            <Bookmark className={cn("w-4 h-4", bookmarked && "fill-current")} />
+            <Bookmark className={cn("w-4 h-4", saved && "fill-current")} />
           </button>
         </div>
       </div>
 
-      {/* Description strip */}
       {description && (
         <div className="px-5 py-2.5 bg-muted/40 border-t border-border text-xs text-muted-foreground flex items-center justify-between gap-4">
           <span className="truncate">{description}</span>
@@ -202,9 +152,9 @@ export function CargoCard({
             <span
               role="button"
               tabIndex={0}
-              onClick={handleEmailClick}
-              onKeyDown={e => e.key === "Enter" && handleEmailClick(e as unknown as React.MouseEvent)}
-              className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors shrink-0 cursor-pointer"
+              onClick={handleEmail}
+              onKeyDown={e => e.key === "Enter" && handleEmail(e as unknown as React.MouseEvent)}
+              className="flex items-center gap-1 text-muted-foreground hover:text-primary cursor-pointer shrink-0"
             >
               <Mail className="w-3.5 h-3.5" />
               {contact.email}
