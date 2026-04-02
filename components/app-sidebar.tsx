@@ -12,7 +12,6 @@ import {
   Bell,
   User,
   Settings,
-  Search,
   Menu,
   X,
   ChevronRight,
@@ -141,17 +140,7 @@ export function AppSidebar() {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="px-3 py-3 border-b border-border shrink-0">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Ieškoti…"
-              className="w-full pl-8 pr-3 py-2 bg-secondary rounded-lg text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-        </div>
+
 
         {/* Nav */}
         <nav className="flex-1 px-2 py-3 overflow-y-auto">

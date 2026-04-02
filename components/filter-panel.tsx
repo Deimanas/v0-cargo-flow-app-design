@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { X, RefreshCw, MapPin, Calendar as CalendarIcon, ChevronDown } from "lucide-react"
+import { X, RefreshCw, MapPin, Calendar as CalendarIcon, Bookmark, Save } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface FilterPanelProps {
@@ -9,6 +9,12 @@ interface FilterPanelProps {
   className?: string
   isModal?: boolean
 }
+
+const SAVED_SEARCHES = [
+  { id: "ss1", label: "LT → DE", newCount: 3 },
+  { id: "ss2", label: "Šaldomieji", newCount: 1 },
+  { id: "ss3", label: "ADR kroviniai", newCount: 0 },
+]
 
 const CARGO_TYPES = [
   { id: "bendras",       label: "Bendras" },
@@ -49,6 +55,9 @@ export function FilterPanel({ onClose, className, isModal }: FilterPanelProps) {
   const [partialLoading, setPartialLoading] = useState(false)
   const [adrOnly, setAdrOnly] = useState(false)
   const [selectedCargoTypes, setSelectedCargoTypes] = useState<string[]>([])
+  const [activeSavedSearch, setActiveSavedSearch] = useState<string | null>(null)
+  const [showSaveModal, setShowSaveModal] = useState(false)
+  const [newSearchName, setNewSearchName] = useState("")
 
   const toggleType = (id: string) =>
     setSelectedCargoTypes(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id])
@@ -80,6 +89,49 @@ export function FilterPanel({ onClose, className, isModal }: FilterPanelProps) {
 
       {/* Body */}
       <div className={cn("flex-1 overflow-y-auto px-4 py-4 space-y-5", isModal && "pb-28")}>
+
+        {/* Saved Searches */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <SectionLabel>Išsaugotos paieškos</SectionLabel>
+            <button 
+              type="button"
+              onClick={() => setShowSaveModal(true)}
+              className="flex items-center gap-1 text-xs text-primary font-medium hover:text-primary/80 transition-colors"
+            >
+              <Save className="w-3 h-3" />
+              Išsaugoti
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {SAVED_SEARCHES.map(ss => (
+              <button
+                key={ss.id}
+                type="button"
+                onClick={() => setActiveSavedSearch(activeSavedSearch === ss.id ? null : ss.id)}
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all",
+                  activeSavedSearch === ss.id
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <Bookmark className={cn("w-3 h-3", activeSavedSearch === ss.id && "fill-current")} />
+                {ss.label}
+                {ss.newCount > 0 && (
+                  <span className={cn(
+                    "px-1.5 py-0.5 rounded-full text-[10px] font-bold",
+                    activeSavedSearch === ss.id
+                      ? "bg-white/20 text-white"
+                      : "bg-primary text-primary-foreground"
+                  )}>
+                    +{ss.newCount}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Origin */}
         <div>
@@ -231,6 +283,43 @@ export function FilterPanel({ onClose, className, isModal }: FilterPanelProps) {
             Taikyti filtrus
           </button>
         </div>
+      )}
+
+      {/* Save search modal */}
+      {showSaveModal && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/50 z-50"
+            onClick={() => setShowSaveModal(false)}
+          />
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 bg-card border border-border rounded-xl p-5 z-50 shadow-xl">
+            <h3 className="text-base font-semibold text-foreground mb-1">Išsaugoti paiešką</h3>
+            <p className="text-xs text-muted-foreground mb-4">Įveskite paieškos pavadinimą</p>
+            <input
+              type="text"
+              value={newSearchName}
+              onChange={e => setNewSearchName(e.target.value)}
+              placeholder="Pvz.: LT → DE kroviniai"
+              className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 mb-4"
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setShowSaveModal(false); setNewSearchName("") }}
+                className="flex-1 py-2.5 bg-muted text-foreground rounded-lg font-medium text-sm hover:bg-muted/80 transition-colors"
+              >
+                Atšaukti
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowSaveModal(false); setNewSearchName("") }}
+                className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:bg-primary/90 transition-colors"
+              >
+                Išsaugoti
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   )

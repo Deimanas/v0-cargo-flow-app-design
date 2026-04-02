@@ -9,7 +9,6 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 /* ─────────────────────────────────────────────────────────────
@@ -82,14 +81,9 @@ const DASHBOARD_TABS = [
    PAGE COMPONENT
 ───────────────────────────────────────────────────────────── */
 export default function HomePage() {
-  const router = useRouter()
   const [activeTab, setActiveTab] = useState("published")
   const [filtersVisible, setFiltersVisible] = useState(true)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
-
-  function handleCargoClick(cargoId: string) {
-    router.push(`/kroviniai/${cargoId}`)
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -202,16 +196,13 @@ export default function HomePage() {
           <div className="flex gap-5">
             <div className="flex-1 min-w-0 space-y-3">
               {DASHBOARD_CARGOS.map(cargo => (
-                <div
+                <Link
                   key={cargo.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => handleCargoClick(cargo.id)}
-                  onKeyDown={e => e.key === "Enter" && handleCargoClick(cargo.id)}
-                  className="cursor-pointer"
+                  href={`/kroviniai/${cargo.id}`}
+                  className="block cursor-pointer"
                 >
                   <CargoCard {...cargo} />
-                </div>
+                </Link>
               ))}
             </div>
 
