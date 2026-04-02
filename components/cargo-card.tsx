@@ -1,6 +1,6 @@
 "use client"
 
-import { Bookmark, Eye, Package, MapPin, Calendar } from "lucide-react"
+import { Bookmark, Eye, Package, MapPin, Calendar, Phone, Mail } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 import { useState } from "react"
@@ -27,6 +27,11 @@ interface CargoCardProps {
   views?: number
   isBookmarked?: boolean
   description?: string
+  contact?: {
+    name: string
+    phone?: string
+    email?: string
+  }
   onClick?: () => void
 }
 
@@ -43,14 +48,14 @@ const countryFlagUrls: Record<string, string> = {
 
 function CountryFlag({ country }: { country: string }) {
   const flagUrl = countryFlagUrls[country]
-  if (!flagUrl) return <span className="w-5 h-3.5 bg-muted rounded" />
+  if (!flagUrl) return <span className="inline-block w-5 h-3.5 bg-muted rounded" />
   return (
     <Image
       src={flagUrl}
       alt={country}
       width={20}
       height={14}
-      className="rounded-sm object-cover w-auto h-auto"
+      className="rounded-sm object-cover"
       unoptimized
       loading="eager"
     />
@@ -68,6 +73,7 @@ export function CargoCard({
   views = 0,
   isBookmarked: initialBookmarked = false,
   description,
+  contact,
   onClick,
 }: CargoCardProps) {
   const [isBookmarked, setIsBookmarked] = useState(initialBookmarked)
@@ -78,95 +84,140 @@ export function CargoCard({
     setIsBookmarked(!isBookmarked)
   }
 
+  const weight = tags.find(t => t.match(/\d+(\.\d+)?\s*t$/))
+
   return (
-    <div 
+    <div
       onClick={onClick}
-      className="group bg-card rounded-2xl border border-border p-5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all cursor-pointer"
+      className="group bg-card rounded-2xl border border-border px-5 py-4 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all cursor-pointer"
     >
-      {/* Header Row */}
-      <div className="flex items-start justify-between mb-4">
-        <button 
-          className={cn(
-            "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
-            isBookmarked 
-              ? "bg-primary/15 border-primary/30 text-primary" 
-              : "bg-secondary border-border text-muted-foreground hover:border-primary/20 hover:text-primary"
+      {/* Top row: bookmark + route + price */}
+      <div className="flex items-start gap-4">
+        {/* Left: bookmark + route */}
+        <div className="flex-1 min-w-0">
+          {/* Route row */}
+          <div className="flex items-center gap-2 mb-3">
+            {/* From */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+              <CountryFlag country={from.country} />
+              <span className="font-semibold text-foreground text-sm">{from.city}</span>
+            </div>
+
+            {/* Arrow + line — fixed width so cities stay ~150px apart */}
+            <div className="flex items-center gap-1 w-[120px] shrink-0">
+              <div className="flex-1 h-px bg-border" />
+              <svg width="12" height="8" viewBox="0 0 12 8" fill="none" className="text-muted-foreground shrink-0">
+                <path d="M7.5 1L11 4L7.5 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M1 4H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            {/* To */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+              <CountryFlag country={to.country} />
+              <span className="font-semibold text-foreground text-sm">{to.city}</span>
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div className="flex flex-wrap items-center gap-1.5 mb-3">
+            {tags.map((tag) => (
+              <span
+                key={tag}
+                className="px-2 py-0.5 bg-secondary rounded-md text-xs text-muted-foreground font-medium"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+
+          {/* Meta row */}
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            {weight && (
+              <span className="flex items-center gap-1">
+                <Package className="w-3.5 h-3.5" />
+                {weight}
+              </span>
+            )}
+            <span className="flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5" />
+              {distance} km
+            </span>
+            <span className="flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5" />
+              {date}
+            </span>
+          </div>
+
+          {description && (
+            <p className="text-xs text-muted-foreground mt-2 line-clamp-1">{description}</p>
           )}
-          onClick={handleBookmark}
-        >
-          <Bookmark className={cn("w-3.5 h-3.5", isBookmarked && "fill-current")} />
-          Įsiminti
-        </button>
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Eye className="w-3.5 h-3.5" />
-          {views}
         </div>
-      </div>
 
-      {/* Route */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-primary" />
-          <CountryFlag country={from.country} />
-          <span className="font-semibold text-foreground">{from.city}</span>
-        </div>
-        <div className="flex-1 h-px bg-gradient-to-r from-primary/50 via-border to-green-500/50 mx-2" />
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-green-500" />
-          <CountryFlag country={to.country} />
-          <span className="font-semibold text-foreground">{to.city}</span>
-        </div>
-      </div>
-
-      {/* Tags Row */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        {tags.map((tag) => (
-          <span
-            key={tag}
-            className="px-2.5 py-1 bg-secondary rounded-lg text-xs text-muted-foreground font-medium"
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
-
-      {/* Info Row with correct icons */}
-      <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
-        <span className="flex items-center gap-1.5">
-          <Package className="w-4 h-4" />
-          {tags.find(t => t.includes(' t')) || tags[0] || '—'}
-        </span>
-        <span className="flex items-center gap-1.5">
-          <MapPin className="w-4 h-4" />
-          {distance} km
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Calendar className="w-4 h-4" />
-          {date}
-        </span>
-      </div>
-
-      {/* Description */}
-      {description && (
-        <p className="text-sm text-muted-foreground mb-4 line-clamp-1">
-          {description}
-        </p>
-      )}
-
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-4 border-t border-border">
-        <div className="text-xs text-muted-foreground">
-          prieš 4 d ir 21 val
-        </div>
-        <div className="text-right">
+        {/* Right: price + views */}
+        <div className="flex flex-col items-end gap-2 shrink-0">
           {price ? (
-            <p className="font-bold text-foreground text-xl">
+            <p className="font-bold text-foreground text-lg leading-tight">
               {price.toLocaleString("lt-LT").replace(",", " ")} €
             </p>
           ) : (
-            <p className="font-medium text-muted-foreground">Kaina derinama</p>
+            <p className="text-sm font-medium text-muted-foreground">Kaina derinama</p>
+          )}
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Eye className="w-3.5 h-3.5" />
+            {views}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer row */}
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+        <div className="flex items-center gap-3">
+          {/* Bookmark button */}
+          <button
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
+              isBookmarked
+                ? "bg-primary/15 border-primary/30 text-primary"
+                : "bg-secondary border-border text-muted-foreground hover:border-primary/20 hover:text-primary"
+            )}
+            onClick={handleBookmark}
+          >
+            <Bookmark className={cn("w-3.5 h-3.5", isBookmarked && "fill-current")} />
+            {isBookmarked ? "Išsaugota" : "Įsiminti"}
+          </button>
+
+          {/* Contact info */}
+          {contact && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {contact.phone && (
+                <a
+                  href={`tel:${contact.phone}`}
+                  onClick={e => e.stopPropagation()}
+                  className="flex items-center gap-1 hover:text-primary transition-colors"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  {contact.phone}
+                </a>
+              )}
+              {contact.email && (
+                <a
+                  href={`mailto:${contact.email}`}
+                  onClick={e => e.stopPropagation()}
+                  className="flex items-center gap-1 hover:text-primary transition-colors"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  {contact.email}
+                </a>
+              )}
+            </div>
           )}
         </div>
+
+        <p className="text-xs text-muted-foreground">prieš 4 d ir 21 val</p>
       </div>
     </div>
   )

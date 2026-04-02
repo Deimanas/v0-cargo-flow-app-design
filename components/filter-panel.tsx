@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, X, RefreshCw, Save, MapPin, Calendar as CalendarIcon } from "lucide-react"
+import { X, RefreshCw, MapPin, Calendar as CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface FilterPanelProps {
@@ -19,17 +19,10 @@ const cargoTypes = [
   { id: "biri", label: "Biri" },
 ]
 
-const savedFilters = [
-  { id: "1", name: "LT → DE kroviniai" },
-  { id: "2", name: "Šaldomieji iki 5t" },
-]
-
 export function FilterPanel({ onClose, className, isModal }: FilterPanelProps) {
   const [partialLoading, setPartialLoading] = useState(false)
   const [adrOnly, setAdrOnly] = useState(false)
   const [selectedCargoTypes, setSelectedCargoTypes] = useState<string[]>([])
-  const [showSaveModal, setShowSaveModal] = useState(false)
-  const [filterName, setFilterName] = useState("")
 
   const toggleCargoType = (id: string) => {
     setSelectedCargoTypes(prev => 
@@ -67,33 +60,6 @@ export function FilterPanel({ onClose, className, isModal }: FilterPanelProps) {
         isModal ? "pb-32" : ""
       )}>
         
-        {/* Saved Filters Section */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Išsaugoti filtrai
-            </label>
-            <button 
-              onClick={() => setShowSaveModal(true)}
-              className="text-xs text-primary font-medium hover:underline flex items-center gap-1"
-            >
-              <Save className="w-3 h-3" />
-              Išsaugoti
-            </button>
-          </div>
-          <div className="space-y-2">
-            {savedFilters.map(filter => (
-              <button
-                key={filter.id}
-                className="w-full flex items-center gap-2 px-3 py-2 bg-secondary/50 hover:bg-secondary border border-border rounded-xl text-sm text-left transition-colors"
-              >
-                <RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-foreground">{filter.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Origin */}
         <div>
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
@@ -364,42 +330,7 @@ export function FilterPanel({ onClose, className, isModal }: FilterPanelProps) {
         </div>
       )}
 
-      {/* Save Filter Modal */}
-      {showSaveModal && (
-        <>
-          <div 
-            className="fixed inset-0 bg-black/50 z-50"
-            onClick={() => setShowSaveModal(false)}
-          />
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 bg-card border border-border rounded-2xl p-5 z-50">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Išsaugoti filtrą</h3>
-            <input
-              type="text"
-              value={filterName}
-              onChange={(e) => setFilterName(e.target.value)}
-              placeholder="Filtro pavadinimas"
-              className="w-full px-3 py-2.5 bg-secondary border border-border rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 mb-4"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowSaveModal(false)}
-                className="flex-1 py-2.5 bg-secondary text-foreground rounded-xl font-medium hover:bg-muted transition-colors"
-              >
-                Atšaukti
-              </button>
-              <button
-                onClick={() => {
-                  setShowSaveModal(false)
-                  setFilterName("")
-                }}
-                className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
-              >
-                Išsaugoti
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+
     </div>
   )
 }

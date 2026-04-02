@@ -22,6 +22,7 @@ const mockCargos = [
     tags: ["Bendras", "Tentinė", "11.8 t"],
     views: 12,
     description: "Greitai reikalingas pervežimas",
+    contact: { name: "UAB Greitas", phone: "+37060011111", email: "info@greitas.lt" },
   },
   {
     id: "2",
@@ -36,6 +37,7 @@ const mockCargos = [
     tags: ["Šaldomas", "Refrižeratorius", "10 t"],
     views: 8,
     description: "Temperatūrinis režimas būtinas",
+    contact: { name: "Jonas Jonaitis", phone: "+37062500000" },
   },
   {
     id: "3",
@@ -50,6 +52,7 @@ const mockCargos = [
     tags: ["Bendras", "Mega priekaba", "16 t"],
     views: 5,
     description: "Pilnas krovinys į Kauno sandėlį",
+    contact: { name: "UAB Sandėlis", phone: "+37062650778", email: "sandėlis@lt.lt" },
   },
   {
     id: "4",
@@ -64,6 +67,7 @@ const mockCargos = [
     tags: ["Negabaritinis", "Platforma", "15 t"],
     views: 3,
     description: "Specialus krovinys",
+    contact: { name: "Petras P.", phone: "+37065000001" },
   },
   {
     id: "5",
@@ -77,12 +81,13 @@ const mockCargos = [
     status: "active" as const,
     tags: ["Bendras", "Tentinė", "2.8 t"],
     views: 7,
+    contact: { name: "UAB Ekspres", phone: "+37061234567" },
   },
   {
     id: "6",
     from: { city: "Utena", country: "LT" },
     to: { city: "Klaipėda", country: "LT" },
-    distance: 331.1,
+    distance: 331,
     price: 1040,
     priceNegotiable: true,
     weight: 7.6,
@@ -91,11 +96,13 @@ const mockCargos = [
     tags: ["Bendroji", "Tentinė", "7.6 t"],
     views: 3,
     description: "Vidutinio dydzio krovinys i uosta.",
+    contact: { name: "UAB dfsdfsdsf", phone: "+37062650778", email: "dfubis@gmail.com" },
   },
 ]
 
 const filterTabs = [
-  { id: "saved", label: "Išsaugoti", icon: Bookmark },
+  { id: "saved_sf1", label: "LT → DE", isSaved: true },
+  { id: "saved_sf2", label: "Šaldomieji", isSaved: true },
   { id: "published", label: "Paskelbti" },
   { id: "all", label: "Visi" },
 ]
@@ -226,20 +233,24 @@ export default function KroviniaiPage() {
             </button>
           </div>
 
-          {/* Filter Tabs */}
-          <div className="flex items-center gap-2 mb-6">
+          {/* Filter Tabs — saved presets + generic tabs */}
+          <div className="flex items-center gap-2 mb-6 flex-wrap">
             {filterTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all",
+                  "flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all border",
                   activeTab === tab.id
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                    : "bg-card border border-border text-foreground hover:bg-muted"
+                    ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20"
+                    : tab.isSaved
+                    ? "bg-card border-dashed border-primary/40 text-primary hover:bg-primary/5"
+                    : "bg-card border-border text-foreground hover:bg-muted"
                 )}
               >
-                {tab.icon && <tab.icon className="w-4 h-4" />}
+                {tab.isSaved && (
+                  <Bookmark className={cn("w-3.5 h-3.5", activeTab === tab.id ? "fill-current" : "")} />
+                )}
                 {tab.label}
               </button>
             ))}
@@ -249,9 +260,9 @@ export default function KroviniaiPage() {
           <div className="flex gap-6">
             {/* Cargo List - Single Column */}
             <div className="flex-1 min-w-0">
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {mockCargos.map((cargo) => (
-                  <Link key={cargo.id} href={`/kroviniai/${cargo.id}`}>
+                  <Link key={cargo.id} href={`/kroviniai/${cargo.id}`} className="block">
                     <CargoCard {...cargo} />
                   </Link>
                 ))}
