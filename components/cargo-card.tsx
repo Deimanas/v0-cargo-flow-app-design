@@ -3,8 +3,11 @@
 import { Bookmark, Eye, Package, MapPin, Calendar, Phone, Mail, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useCallback } from "react"
 
+/* ─────────────────────────────────────────────────────────────
+   TYPES
+───────────────────────────────────────────────────────────── */
 interface CargoCardProps {
   id: string
   from: { city: string; country: string; address?: string }
@@ -20,10 +23,12 @@ interface CargoCardProps {
   isBookmarked?: boolean
   description?: string
   contact?: { name: string; phone?: string; email?: string }
-  onClick?: () => void
 }
 
-const FLAG_URLS: Record<string, string> = {
+/* ─────────────────────────────────────────────────────────────
+   CONSTANTS
+───────────────────────────────────────────────────────────── */
+const COUNTRY_FLAGS: Record<string, string> = {
   LT: "https://flagcdn.com/w40/lt.png",
   LV: "https://flagcdn.com/w40/lv.png",
   EE: "https://flagcdn.com/w40/ee.png",
@@ -34,13 +39,22 @@ const FLAG_URLS: Record<string, string> = {
   FR: "https://flagcdn.com/w40/fr.png",
 }
 
-function FlagIcon({ code }: { code: string }) {
-  const src = FLAG_URLS[code]
-  if (!src) return <span className="inline-block w-5 h-3.5 rounded-sm bg-muted" />
+const STATUS_STYLES = {
+  active:     { className: "bg-emerald-50 text-emerald-700 border-emerald-200", text: "Aktyvus" },
+  negotiable: { className: "bg-amber-50 text-amber-700 border-amber-200",       text: "Derinama" },
+  expired:    { className: "bg-slate-100 text-slate-500 border-slate-200",       text: "Pasibaigęs" },
+}
+
+/* ─────────────────────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────────────────────── */
+function CountryFlagImage({ countryCode }: { countryCode: string }) {
+  const flagSrc = COUNTRY_FLAGS[countryCode]
+  if (!flagSrc) return <span className="inline-block w-5 h-3.5 rounded-sm bg-muted" />
   return (
     <Image
-      src={src}
-      alt={code}
+      src={flagSrc}
+      alt={countryCode}
       width={20}
       height={14}
       className="rounded-sm object-cover"
@@ -50,39 +64,49 @@ function FlagIcon({ code }: { code: string }) {
   )
 }
 
-const STATUS_MAP = {
-  active:     { style: "bg-emerald-50 text-emerald-700 border-emerald-200", label: "Aktyvus" },
-  negotiable: { style: "bg-amber-50 text-amber-700 border-amber-200",       label: "Derinama" },
-  expired:    { style: "bg-slate-100 text-slate-500 border-slate-200",       label: "Pasibaigęs" },
-}
-
+/* ─────────────────────────────────────────────────────────────
+   COMPONENT — NO ANCHOR TAGS, only span + onClick
+───────────────────────────────────────────────────────────── */
 export function CargoCard({
-  from, to, distance, price, weight, date, status,
-  tags, views = 0, isBookmarked: initialBookmarked = false,
-  description, contact,
+  from,
+  to,
+  distance,
+  price,
+  weight,
+  date,
+  status,
+  tags,
+  views = 0,
+  isBookmarked: initialBookmarked = false,
+  description,
+  contact,
 }: CargoCardProps) {
-  const [saved, setSaved] = useState(initialBookmarked)
+  const [bookmarked, setBookmarked] = useState(initialBookmarked)
 
-  const toggleSave = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setSaved(prev => !prev)
-  }
+  const handleBookmarkClick = useCallback((evt: React.MouseEvent) => {
+    evt.preventDefault()
+    evt.stopPropagation()
+    setBookmarked(prev => !prev)
+  }, [])
 
-  const openPhone = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (contact?.phone) window.location.href = `tel:${contact.phone}`
-  }
+  const handlePhoneClick = useCallback((evt: React.MouseEvent) => {
+    evt.preventDefault()
+    evt.stopPropagation()
+    if (contact?.phone) {
+      window.open(`tel:${contact.phone}`, "_self")
+    }
+  }, [contact?.phone])
 
-  const openEmail = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (contact?.email) window.location.href = `mailto:${contact.email}`
-  }
+  const handleEmailClick = useCallback((evt: React.MouseEvent) => {
+    evt.preventDefault()
+    evt.stopPropagation()
+    if (contact?.email) {
+      window.open(`mailto:${contact.email}`, "_self")
+    }
+  }, [contact?.email])
 
   const cargoType = tags.find(t => !t.match(/^\d/) && !t.match(/t$/)) ?? tags[0] ?? "Krovinys"
-  const statusInfo = STATUS_MAP[status]
+  const statusData = STATUS_STYLES[status]
 
   return (
     <div className="group bg-card border border-border hover:border-primary/30 hover:shadow-sm transition-all rounded-xl overflow-hidden">
@@ -92,7 +116,7 @@ export function CargoCard({
         <div className="flex items-center gap-3 px-5 py-4 min-w-0 flex-1">
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-            <FlagIcon code={from.country} />
+            <CountryFlagImage countryCode={from.country} />
             <span className="font-semibold text-sm text-foreground whitespace-nowrap">{from.city}</span>
           </div>
           <div className="flex items-center w-[100px] shrink-0">
@@ -102,7 +126,7 @@ export function CargoCard({
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <FlagIcon code={to.country} />
+            <CountryFlagImage countryCode={to.country} />
             <span className="font-semibold text-sm text-foreground whitespace-nowrap">{to.city}</span>
           </div>
         </div>
@@ -121,14 +145,14 @@ export function CargoCard({
           <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{date}</span>
         </div>
 
-        {/* Contact — using span+onClick, NOT anchor tags */}
+        {/* Contact — SPAN not anchor */}
         <div className="px-4 py-4 shrink-0 hidden lg:flex items-center gap-3 w-[200px]">
           {contact?.phone && (
             <span
               role="button"
               tabIndex={0}
-              onClick={openPhone}
-              onKeyDown={e => e.key === "Enter" && openPhone(e as unknown as React.MouseEvent)}
+              onClick={handlePhoneClick}
+              onKeyDown={e => e.key === "Enter" && handlePhoneClick(e as unknown as React.MouseEvent)}
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors truncate cursor-pointer"
             >
               <Phone className="w-3.5 h-3.5 shrink-0" />
@@ -139,8 +163,8 @@ export function CargoCard({
 
         {/* Status + Price */}
         <div className="px-5 py-4 shrink-0 flex flex-col items-end gap-1.5 w-[160px]">
-          <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full border", statusInfo.style)}>
-            {statusInfo.label}
+          <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full border", statusData.className)}>
+            {statusData.text}
           </span>
           {price ? (
             <p className="font-bold text-foreground text-base leading-tight">
@@ -158,14 +182,14 @@ export function CargoCard({
         <div className="px-4 py-4 shrink-0">
           <button
             type="button"
-            onClick={toggleSave}
+            onClick={handleBookmarkClick}
             className={cn(
               "p-2 rounded-lg transition-colors",
-              saved ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+              bookmarked ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary hover:bg-primary/5"
             )}
-            aria-label={saved ? "Pašalinti iš išsaugotų" : "Išsaugoti"}
+            aria-label={bookmarked ? "Pašalinti iš išsaugotų" : "Išsaugoti"}
           >
-            <Bookmark className={cn("w-4 h-4", saved && "fill-current")} />
+            <Bookmark className={cn("w-4 h-4", bookmarked && "fill-current")} />
           </button>
         </div>
       </div>
@@ -178,8 +202,8 @@ export function CargoCard({
             <span
               role="button"
               tabIndex={0}
-              onClick={openEmail}
-              onKeyDown={e => e.key === "Enter" && openEmail(e as unknown as React.MouseEvent)}
+              onClick={handleEmailClick}
+              onKeyDown={e => e.key === "Enter" && handleEmailClick(e as unknown as React.MouseEvent)}
               className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors shrink-0 cursor-pointer"
             >
               <Mail className="w-3.5 h-3.5" />

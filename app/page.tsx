@@ -9,9 +9,13 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
-const mockCargos = [
+/* ─────────────────────────────────────────────────────────────
+   MOCK DATA
+───────────────────────────────────────────────────────────── */
+const DASHBOARD_CARGOS = [
   {
     id: "1",
     from: { city: "Vilnius", country: "LT" },
@@ -56,22 +60,30 @@ const mockCargos = [
   },
 ]
 
-const STATS = [
+const DASHBOARD_STATS = [
   { label: "Aktyvūs kroviniai",  value: "2 847", icon: Package, trend: "+12%", color: "text-primary",  bg: "bg-primary/8" },
   { label: "Laisvas transportas", value: "1 234", icon: Truck,   trend: "+8%",  color: "text-emerald-600", bg: "bg-emerald-50" },
   { label: "Vežėjai šiandien",    value: "856",   icon: Users,   trend: "+5%",  color: "text-violet-600",  bg: "bg-violet-50" },
 ]
 
-const FILTER_TABS = [
+const DASHBOARD_TABS = [
   { id: "saved", label: "Išsaugoti", icon: Bookmark },
   { id: "published", label: "Paskelbti" },
   { id: "all", label: "Visi" },
 ]
 
+/* ─────────────────────────────────────────────────────────────
+   PAGE COMPONENT
+───────────────────────────────────────────────────────────── */
 export default function HomePage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState("published")
-  const [showFilters, setShowFilters] = useState(true)
-  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [filtersVisible, setFiltersVisible] = useState(true)
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+
+  function handleCargoClick(cargoId: string) {
+    router.push(`/kroviniai/${cargoId}`)
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -80,8 +92,8 @@ export default function HomePage() {
       <main className="lg:pl-60 pt-14 lg:pt-0">
         <div className="p-4 lg:p-6 max-w-[1440px] mx-auto">
 
-          {/* Page header */}
-          <div className="flex items-center justify-between mb-5">
+          {/* Header */}
+          <header className="flex items-center justify-between mb-5">
             <div>
               <h1 className="text-xl font-bold text-foreground tracking-tight">Valdymo skydas</h1>
               <p className="text-xs text-muted-foreground mt-0.5">Sveiki sugrįžę, Deimanai</p>
@@ -99,11 +111,11 @@ export default function HomePage() {
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-white text-[10px] rounded-full flex items-center justify-center font-bold leading-none">5</span>
               </button>
             </div>
-          </div>
+          </header>
 
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-            {STATS.map(stat => (
+            {DASHBOARD_STATS.map(stat => (
               <div key={stat.label} className="bg-card rounded-xl border border-border p-4 flex items-center gap-4">
                 <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", stat.bg)}>
                   <stat.icon className={cn("w-5 h-5", stat.color)} />
@@ -139,16 +151,18 @@ export default function HomePage() {
               />
             </div>
             <button
-              onClick={() => setShowMobileFilters(true)}
+              type="button"
+              onClick={() => setMobileFiltersOpen(true)}
               className="lg:hidden p-2.5 bg-card border border-border rounded-lg hover:bg-muted transition-colors"
             >
               <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
             </button>
             <button
-              onClick={() => setShowFilters(f => !f)}
+              type="button"
+              onClick={() => setFiltersVisible(v => !v)}
               className={cn(
                 "hidden lg:flex items-center gap-1.5 px-3 py-2.5 border rounded-lg text-sm font-medium transition-colors",
-                showFilters
+                filtersVisible
                   ? "bg-primary/8 border-primary/25 text-primary"
                   : "bg-card border-border text-muted-foreground hover:bg-muted"
               )}
@@ -160,9 +174,10 @@ export default function HomePage() {
 
           {/* Tabs */}
           <div className="flex items-center gap-1.5 mb-4">
-            {FILTER_TABS.map(tab => (
+            {DASHBOARD_TABS.map(tab => (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
@@ -177,32 +192,42 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Content */}
+          {/* Content — NO Link wrapper */}
           <div className="flex gap-5">
             <div className="flex-1 min-w-0 space-y-1.5">
-              {mockCargos.map(cargo => (
-                <Link key={cargo.id} href={`/kroviniai/${cargo.id}`} className="block">
+              {DASHBOARD_CARGOS.map(cargo => (
+                <div
+                  key={cargo.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleCargoClick(cargo.id)}
+                  onKeyDown={e => e.key === "Enter" && handleCargoClick(cargo.id)}
+                  className="cursor-pointer"
+                >
                   <CargoCard {...cargo} />
-                </Link>
+                </div>
               ))}
             </div>
 
-            {showFilters && (
-              <div className="hidden lg:block w-72 shrink-0">
+            {filtersVisible && (
+              <aside className="hidden lg:block w-72 shrink-0">
                 <div className="sticky top-4">
                   <FilterPanel />
                 </div>
-              </div>
+              </aside>
             )}
           </div>
         </div>
       </main>
 
-      {showMobileFilters && (
+      {mobileFiltersOpen && (
         <>
-          <div className="lg:hidden fixed inset-0 bg-black/40 z-40 backdrop-blur-sm" onClick={() => setShowMobileFilters(false)} />
+          <div
+            className="lg:hidden fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
+            onClick={() => setMobileFiltersOpen(false)}
+          />
           <div className="lg:hidden fixed inset-0 bg-card z-50 overflow-hidden">
-            <FilterPanel isModal onClose={() => setShowMobileFilters(false)} />
+            <FilterPanel isModal onClose={() => setMobileFiltersOpen(false)} />
           </div>
         </>
       )}
