@@ -13,6 +13,9 @@ import {
   Package,
   Truck,
   ChevronRight,
+  ChevronLeft,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
@@ -150,6 +153,8 @@ const ACTIVE_FILTERS = [
   { id: "f2", label: "Svoris: 5-20 t" },
 ]
 
+const ITEMS_PER_PAGE = 10
+
 export default function KroviniaiPage() {
   const [statusTab, setStatusTab] = useState("all")
   const [showFilters, setShowFilters] = useState(true)
@@ -157,6 +162,7 @@ export default function KroviniaiPage() {
   const [searchText, setSearchText] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [activeFilters, setActiveFilters] = useState(ACTIVE_FILTERS)
+  const [currentPage, setCurrentPage] = useState(1)
   const searchRef = useRef<HTMLDivElement>(null)
 
   // Filter cities based on search
@@ -168,6 +174,16 @@ export default function KroviniaiPage() {
   const filteredCargo = CARGO_DATA.filter(c => 
     statusTab === "all" || c.status === statusTab
   )
+
+  // Pagination
+  const totalPages = Math.ceil(filteredCargo.length / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const paginatedCargo = filteredCargo.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+
+  // Reset page when filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [statusTab])
 
   // Check if any cargo is in transit or assigned (for reminder)
   const hasActiveDelivery = CARGO_DATA.some(c => c.status === "in_transit" || c.status === "assigned")
@@ -419,16 +435,129 @@ export default function KroviniaiPage() {
           <div className="flex gap-6">
             {/* Cargo list */}
             <div className="flex-1 min-w-0 space-y-3">
-              {filteredCargo.length > 0 ? (
-                filteredCargo.map(cargo => (
-                  <Link
-                    key={cargo.id}
-                    href={`/kroviniai/${cargo.id}`}
-                    className="block cursor-pointer"
-                  >
-                    <CargoCard {...cargo} />
-                  </Link>
-                ))
+              {paginatedCargo.length > 0 ? (
+                <>
+                  {paginatedCargo.map(cargo => (
+                    <Link
+                      key={cargo.id}
+                      href={`/kroviniai/${cargo.id}`}
+                      className="block cursor-pointer"
+                    >
+                      <CargoCard {...cargo} />
+                    </Link>
+                  ))}
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between pt-6 mt-4 border-t border-border">
+                      {/* Results info */}
+                      <p className="text-sm text-muted-foreground">
+                        Rodoma {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, filteredCargo.length)} iš {filteredCargo.length}
+                      </p>
+
+                      {/* Pagination controls */}
+                      <div className="flex items-center gap-1">
+                        {/* First page */}
+                        <button
+                          type="button"
+                          onClick={() => setCurrentPage(1)}
+                          disabled={currentPage === 1}
+                          className={cn(
+                            "p-2 rounded-lg transition-colors",
+                            currentPage === 1
+                              ? "text-muted-foreground/40 cursor-not-allowed"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          )}
+                          title="Pirmas puslapis"
+                        >
+                          <ChevronsLeft className="w-4 h-4" />
+                        </button>
+
+                        {/* Previous page */}
+                        <button
+                          type="button"
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className={cn(
+                            "p-2 rounded-lg transition-colors",
+                            currentPage === 1
+                              ? "text-muted-foreground/40 cursor-not-allowed"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          )}
+                          title="Ankstesnis puslapis"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+
+                        {/* Page numbers */}
+                        <div className="flex items-center gap-1 mx-2">
+                          {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter(page => {
+                              // Show first, last, current, and adjacent pages
+                              if (page === 1 || page === totalPages) return true
+                              if (Math.abs(page - currentPage) <= 1) return true
+                              return false
+                            })
+                            .map((page, idx, arr) => {
+                              // Add ellipsis
+                              const showEllipsisBefore = idx > 0 && page - arr[idx - 1] > 1
+                              return (
+                                <span key={page} className="flex items-center">
+                                  {showEllipsisBefore && (
+                                    <span className="px-2 text-muted-foreground">...</span>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => setCurrentPage(page)}
+                                    className={cn(
+                                      "min-w-9 h-9 px-3 rounded-lg text-sm font-medium transition-colors",
+                                      currentPage === page
+                                        ? "bg-primary text-primary-foreground"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                    )}
+                                  >
+                                    {page}
+                                  </button>
+                                </span>
+                              )
+                            })}
+                        </div>
+
+                        {/* Next page */}
+                        <button
+                          type="button"
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          className={cn(
+                            "p-2 rounded-lg transition-colors",
+                            currentPage === totalPages
+                              ? "text-muted-foreground/40 cursor-not-allowed"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          )}
+                          title="Kitas puslapis"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+
+                        {/* Last page */}
+                        <button
+                          type="button"
+                          onClick={() => setCurrentPage(totalPages)}
+                          disabled={currentPage === totalPages}
+                          className={cn(
+                            "p-2 rounded-lg transition-colors",
+                            currentPage === totalPages
+                              ? "text-muted-foreground/40 cursor-not-allowed"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          )}
+                          title="Paskutinis puslapis"
+                        >
+                          <ChevronsRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mb-4">
