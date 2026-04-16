@@ -248,20 +248,124 @@ export function CargoDetail({ cargo }: CargoDetailProps) {
         </div>
       )}
 
-      {/* Map placeholder */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="h-64 bg-muted flex items-center justify-center">
-          <div className="text-center">
-            <Navigation className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground mb-3">Žemėlapio vaizdas</p>
-            <div className="flex items-center justify-center gap-2">
-              {["Google Maps", "Waze", "OSM"].map(name => (
-                <button key={name} className="px-3 py-1.5 bg-card border border-border rounded-lg text-xs font-medium text-foreground hover:bg-secondary transition-colors">
-                  {name}
-                </button>
-              ))}
+      {/* Navigation buttons */}
+      <div className="bg-card border border-border rounded-xl p-4">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-1.5">
+          <Navigation className="w-4 h-4 text-primary" />
+          Navigacija
+        </h3>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Pickup navigation */}
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              Pakrovimo vieta
+            </p>
+            <p className="text-sm font-medium text-foreground mb-2">{cargo.from.address}, {cargo.from.city}</p>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(cargo.from.address + ", " + cargo.from.city)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-2 bg-white border border-border rounded-lg text-xs font-medium text-foreground hover:bg-muted hover:border-primary/30 transition-all"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#EA4335"/>
+                  <circle cx="12" cy="9" r="2.5" fill="#fff"/>
+                </svg>
+                Google Maps
+              </a>
+              <a
+                href={`https://waze.com/ul?q=${encodeURIComponent(cargo.from.address + ", " + cargo.from.city)}&navigate=yes`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-2 bg-white border border-border rounded-lg text-xs font-medium text-foreground hover:bg-muted hover:border-primary/30 transition-all"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none">
+                  <circle cx="12" cy="12" r="10" fill="#33CCFF"/>
+                  <circle cx="9" cy="10" r="1.5" fill="#333"/>
+                  <circle cx="15" cy="10" r="1.5" fill="#333"/>
+                  <path d="M8 14c0 0 2 2 4 2s4-2 4-2" stroke="#333" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                Waze
+              </a>
+              <a
+                href={`https://maps.apple.com/?daddr=${encodeURIComponent(cargo.from.address + ", " + cargo.from.city)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-2 bg-white border border-border rounded-lg text-xs font-medium text-foreground hover:bg-muted hover:border-primary/30 transition-all"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#007AFF"/>
+                  <circle cx="12" cy="9" r="2.5" fill="#fff"/>
+                </svg>
+                Apple Maps
+              </a>
             </div>
           </div>
+
+          {/* Delivery navigation */}
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              Pristatymo vieta
+            </p>
+            <p className="text-sm font-medium text-foreground mb-2">{cargo.to.address}, {cargo.to.city}</p>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(cargo.to.address + ", " + cargo.to.city)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-2 bg-white border border-border rounded-lg text-xs font-medium text-foreground hover:bg-muted hover:border-primary/30 transition-all"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#EA4335"/>
+                  <circle cx="12" cy="9" r="2.5" fill="#fff"/>
+                </svg>
+                Google Maps
+              </a>
+              <a
+                href={`https://waze.com/ul?q=${encodeURIComponent(cargo.to.address + ", " + cargo.to.city)}&navigate=yes`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-2 bg-white border border-border rounded-lg text-xs font-medium text-foreground hover:bg-muted hover:border-primary/30 transition-all"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none">
+                  <circle cx="12" cy="12" r="10" fill="#33CCFF"/>
+                  <circle cx="9" cy="10" r="1.5" fill="#333"/>
+                  <circle cx="15" cy="10" r="1.5" fill="#333"/>
+                  <path d="M8 14c0 0 2 2 4 2s4-2 4-2" stroke="#333" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                Waze
+              </a>
+              <a
+                href={`https://maps.apple.com/?daddr=${encodeURIComponent(cargo.to.address + ", " + cargo.to.city)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-2 bg-white border border-border rounded-lg text-xs font-medium text-foreground hover:bg-muted hover:border-primary/30 transition-all"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#007AFF"/>
+                  <circle cx="12" cy="9" r="2.5" fill="#fff"/>
+                </svg>
+                Apple Maps
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Full route button */}
+        <div className="mt-4 pt-4 border-t border-border">
+          <a
+            href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(cargo.from.address + ", " + cargo.from.city)}&destination=${encodeURIComponent(cargo.to.address + ", " + cargo.to.city)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+          >
+            <Navigation className="w-4 h-4" />
+            Atidaryti pilną maršrutą Google Maps
+          </a>
         </div>
       </div>
     </div>
